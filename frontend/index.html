@@ -7,11 +7,68 @@
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="home-title" id="home-title">MarketLens</h1>
-        <p class="home-subtitle" id="home-subtitle">Loading...</p>
-    </div>
-    
+    <header class="hero" id="hero">
+        <div class="hero-content">
+            <h1 class="home-title" id="home-title">MarketLens</h1>
+            <p class="home-subtitle" id="home-subtitle">Loading...</p>
+            <a href="#workspace" class="scroll-cta">Start Building Watchlist</a>
+        </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+        <section class="panel panel-stocks" aria-labelledby="stocks-heading">
+            <h2 id="stocks-heading">Stock Picker</h2>
+            <p class="panel-copy">Type a ticker or company name. Pick from dropdown results to add.</p>
+
+            <div class="stock-search-wrap">
+                <input
+                    id="stock-search"
+                    type="search"
+                    class="stock-search"
+                    placeholder="Try: TSLA or Tesla"
+                    autocomplete="off"
+                >
+                <div id="stock-dropdown" class="stock-dropdown" hidden></div>
+            </div>
+
+            <ul id="stock-list" class="item-list" aria-live="polite"></ul>
+            <p id="stock-limit-note" class="limit-note" hidden>Stock limit reached (20).</p>
+        </section>
+
+        <section class="panel panel-interests" aria-labelledby="interests-heading">
+            <h2 id="interests-heading">Analysis Interests</h2>
+            <p class="panel-copy">Add one short interest per line. Up to 20 lines.</p>
+
+            <ul id="interest-list" class="item-list" aria-live="polite">
+                <li class="interest-row">
+                    <input
+                        type="text"
+                        class="rule-input"
+                        placeholder="Example: RSI divergence on daily timeframe"
+                    >
+                </li>
+            </ul>
+            <p id="interest-limit-note" class="limit-note" hidden>Interest limit reached (20).</p>
+        </section>
+    </main>
+
+    <template id="interest-row-template">
+        <li class="interest-row">
+            <input type="text" class="rule-input" placeholder="Type a point of interest...">
+        </li>
+    </template>
+
+    <template id="stock-item-template">
+        <li class="stock-item">
+            <span class="stock-pill-symbol"></span>
+            <span class="stock-pill-name"></span>
+            <button type="button" class="stock-remove" aria-label="Remove stock">Remove</button>
+        </li>
+    </template>
+
+    <div class="sr-only" id="ui-status" aria-live="polite"></div>
+
     <script src="/js/api.js"></script>
+    <script src="/js/home.js"></script>
 </body>
 </html>
