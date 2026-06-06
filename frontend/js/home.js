@@ -29,6 +29,27 @@ async function loadWatchlist() {
     renderStocks();
 }
 
+async function loadInterests() {
+    const interests = await listInterests();
+    const interestList = document.getElementById("interest-list");
+    const template = document.getElementById("interest-row-template");
+    const interestListItems = interestList.querySelectorAll(".rule-input");
+
+    interests.forEach((interest) => {
+        const node = template.content.firstElementChild.cloneNode(true);
+        node.querySelector(".rule-input").value = interest.interest;
+        
+        index = interests.indexOf(interest);
+        if (interestListItems.length > index) {
+            interestListItems[index].value = interest.interest;
+        } else {
+            interestList.appendChild(node);
+        }
+    });
+
+    maybeAppendInterestInput();
+}
+
 function filterStocks(query, searchedStocks) {
     const q = query.trim().toLowerCase();
     if (!q) {
@@ -191,11 +212,29 @@ function setupInterestInputs() {
         }
         maybeAppendInterestInput();
     });
+
+    interestList.addEventListener("blur", (event) => {
+        if (!event.target.classList.contains("rule-input")) {
+            return;
+        }
+
+        const values = getInterestValues();
+        const currentFieldIndex = Array.from(interestList.querySelectorAll(".rule-input")).indexOf(event.target);
+        const value = event.target.value.trim();
+
+        if (!value) {
+            deleteInterest(currentFieldIndex);
+            return;
+        }
+
+        postInterest(currentFieldIndex, value);
+    }, true);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     loadHomeData();
     loadWatchlist();
+    loadInterests();
     setupStockSearch();
     setupInterestInputs();
     renderStocks();

@@ -43,3 +43,30 @@ async function deleteTicker(symbol) {
         method: "DELETE",
     });
 }
+
+async function postInterest(position, interest) {
+    const response = await fetch("/api/interests/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            position: position,
+            interest: interest,
+        }),
+    });
+}
+
+async function listInterests() {
+    const response = await fetch("/api/interests/");
+    if (!response.ok) {
+        return [];
+    }
+    return response.json();
+}
+
+async function deleteInterest(position) {
+    const response = await fetch(`/api/interests/${position}`, {
+        method: "DELETE",
+    });
+}
