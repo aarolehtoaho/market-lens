@@ -23,6 +23,12 @@ async function loadHomeData() {
     document.getElementById("home-subtitle").textContent = data.subtitle;
 }
 
+async function loadWatchlist() {
+    const tickers = await listTickers();
+    selectedStocks = tickers;
+    renderStocks();
+}
+
 function filterStocks(query, searchedStocks) {
     const q = query.trim().toLowerCase();
     if (!q) {
@@ -76,6 +82,7 @@ function renderStocks() {
             selectedStocks = selectedStocks.filter((_, i) => i !== index);
             renderStocks();
             setUiStatus(`${stock.symbol} removed`);
+            deleteTicker(stock.symbol);
         });
         list.appendChild(node);
     });
@@ -96,6 +103,10 @@ function addStock(stock) {
     }
 
     selectedStocks.push(stock);
+
+    listPosition = selectedStocks.length;
+    postTicker(stock, listPosition);
+
     renderStocks();
 
     const input = document.getElementById("stock-search");
@@ -184,6 +195,7 @@ function setupInterestInputs() {
 
 document.addEventListener("DOMContentLoaded", () => {
     loadHomeData();
+    loadWatchlist();
     setupStockSearch();
     setupInterestInputs();
     renderStocks();
