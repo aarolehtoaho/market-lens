@@ -39,6 +39,16 @@ class Database:
             )
         """)
         self.conn.commit()
+        
+        # Create a table for user interests
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS interests (
+                position INTEGER PRIMARY KEY,
+                interest TEXT NOT NULL UNIQUE,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.conn.commit()
 
     def cache_ticker_search(self, query: str, results: list[dict]):
         cursor = self.conn.cursor()
@@ -75,3 +85,19 @@ class Database:
         rows = cursor.fetchall()
         return [{"symbol": row[0], "name": row[1], "exchange": row[2]} for row in rows]
         
+    def list_interests(self) -> list[dict]:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT interest FROM interests ORDER BY position")
+        rows = cursor.fetchall()
+        return [{"interest": row[0]} for row in rows]
+    
+    def add_interest(self, interest: dict, position: int):
+        cursor = self.conn.cursor()
+        cursor.execute("INSERT OR REPLACE INTO interests (position, interest) VALUES (?, ?)", 
+                       (position, interest["interest"]))
+        self.conn.commit()
+
+    def remove_interest(self, position: int):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM interests WHERE position = ?", (position,))
+        self.conn.commit()
