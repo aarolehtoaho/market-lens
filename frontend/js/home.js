@@ -113,7 +113,6 @@ function setupStockSearch() {
     input.addEventListener("input", (event) => {
         clearTimeout(debounceTimer);
         const query = event.target.value;
-        searchedStocks = searchTickers(query);
 
         if (!query.trim()) {
             dropdown.hidden = true;
@@ -121,8 +120,9 @@ function setupStockSearch() {
             return;
         }
 
-        debounceTimer = setTimeout(() => {
-            const matches = filterStocks(query, searchedStocks);
+        debounceTimer = setTimeout(async () => {
+            const data = await searchTickers(query);
+            const matches = filterStocks(query, data);
             renderStockDropdown(matches);
         }, SEARCH_DEBOUNCE_MS);
     });
