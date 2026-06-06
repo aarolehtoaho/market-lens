@@ -2,19 +2,6 @@ const STOCK_LIMIT = 20;
 const INTEREST_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 1000;
 
-const mockStockUniverse = [
-    { symbol: "TSLA", name: "Tesla, Inc." },
-    { symbol: "T", name: "AT&T Inc." },
-    { symbol: "TM", name: "Toyota Motor Corporation" },
-    { symbol: "TTD", name: "The Trade Desk, Inc." },
-    { symbol: "NVDA", name: "NVIDIA Corporation" },
-    { symbol: "AAPL", name: "Apple Inc." },
-    { symbol: "MSFT", name: "Microsoft Corporation" },
-    { symbol: "GOOGL", name: "Alphabet Inc." },
-    { symbol: "KO", name: "The Coca-Cola Company" },
-    { symbol: "PEP", name: "PepsiCo, Inc." },
-];
-
 let selectedStocks = [];
 let debounceTimer = null;
 
@@ -36,13 +23,13 @@ async function loadHomeData() {
     document.getElementById("home-subtitle").textContent = data.subtitle;
 }
 
-function filterStocks(query) {
+function filterStocks(query, searchedStocks) {
     const q = query.trim().toLowerCase();
     if (!q) {
         return [];
     }
 
-    return mockStockUniverse
+    return searchedStocks
         .filter((item) => {
             return (
                 item.symbol.toLowerCase().includes(q) ||
@@ -126,6 +113,7 @@ function setupStockSearch() {
     input.addEventListener("input", (event) => {
         clearTimeout(debounceTimer);
         const query = event.target.value;
+        searchedStocks = searchTickers(query);
 
         if (!query.trim()) {
             dropdown.hidden = true;
@@ -134,7 +122,7 @@ function setupStockSearch() {
         }
 
         debounceTimer = setTimeout(() => {
-            const matches = filterStocks(query);
+            const matches = filterStocks(query, searchedStocks);
             renderStockDropdown(matches);
         }, SEARCH_DEBOUNCE_MS);
     });

@@ -5,3 +5,12 @@ async function getHomeData() {
     }
     return response.json();
 }
+
+async function searchTickers(query) {
+    const response = await fetch(`/api/tickers/search?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+        return [];
+    }
+    tickers = await response.json();
+    return tickers;
+}
