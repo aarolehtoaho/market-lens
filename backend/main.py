@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from backend.routers import tickers, interests
+from backend.routers import tickers, interests, market_data
 
 app = FastAPI(
     title="MarketLens API",
@@ -13,6 +13,7 @@ app = FastAPI(
 
 app.include_router(tickers.router, prefix="/api/tickers")
 app.include_router(interests.router, prefix="/api/interests")
+app.include_router(market_data.router, prefix="/api/market-data")
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
