@@ -81,7 +81,8 @@ function renderStockDropdown(items) {
         button.className = "stock-option";
         button.innerHTML =
             `<span class="stock-option-symbol">${item.symbol}</span>` +
-            `<span class="stock-option-name">${item.name}</span>`;
+            `<span class="stock-option-name">${item.name}</span>` + 
+            `<span class="stock-option-exchange">${item.exchange}</span>`;
         button.addEventListener("click", () => addStock(item));
         dropdown.appendChild(button);
     });
@@ -98,6 +99,7 @@ function renderStocks() {
     selectedStocks.forEach((stock, index) => {
         const node = template.content.firstElementChild.cloneNode(true);
         node.querySelector(".stock-pill-symbol").textContent = stock.symbol;
+        node.querySelector(".stock-pill-exchange").textContent = stock.exchange;
         node.querySelector(".stock-pill-name").textContent = stock.name;
         node.querySelector(".stock-remove").addEventListener("click", () => {
             selectedStocks = selectedStocks.filter((_, i) => i !== index);

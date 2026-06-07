@@ -159,6 +159,11 @@ body {
     font-size: 0.9rem;
 }
 
+.stock-option-exchange {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
 .item-list {
     list-style: none;
     margin-top: 0.9rem;
@@ -168,7 +173,7 @@ body {
 
 .stock-item {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto 1fr auto;
     gap: 0.6rem;
     align-items: center;
     background: var(--pill);
@@ -184,6 +189,11 @@ body {
 .stock-pill-name {
     color: var(--muted);
     font-size: 0.92rem;
+}
+
+.stock-pill-exchange {
+    color: var(--muted);
+    font-size: 0.85rem;
 }
 
 .stock-remove {
