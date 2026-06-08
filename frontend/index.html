@@ -18,7 +18,7 @@
     <main class="workspace" id="workspace">
         <section class="panel panel-stocks" aria-labelledby="stocks-heading">
             <h2 id="stocks-heading">Stock Picker</h2>
-            <p class="panel-copy">Type a ticker or company name. Pick from dropdown results to add.</p>
+            <p class="panel-copy">Search for stocks to add to your watchlist.</p>
 
             <div class="stock-search-wrap">
                 <input
@@ -31,7 +31,7 @@
                 <div id="stock-dropdown" class="stock-dropdown" hidden></div>
             </div>
 
-            <ul id="stock-list" class="item-list" aria-live="polite"></ul>
+            <ul id="stock-list" aria-live="polite"></ul>
             <p id="stock-limit-note" class="limit-note" hidden>Stock limit reached (20).</p>
         </section>
 
@@ -39,7 +39,7 @@
             <h2 id="interests-heading">Analysis Interests</h2>
             <p class="panel-copy">Add one short interest per line. Up to 20 lines.</p>
 
-            <ul id="interest-list" class="item-list" aria-live="polite">
+            <ul id="interest-list" aria-live="polite">
                 <li class="interest-row">
                     <input
                         type="text"
@@ -55,6 +55,7 @@
     <div id="chart-workspace">
         <div id="chart-container" class="panel">
             <h2 id="chart-heading">Chart View</h2>
+            <p class="panel-copy">Select a ticker, period, and interval to view the chart. Selected period and interval will be used for the analysis. Default values are 1 Day and 5 Minutes.</p>
             <div id="selection-container">
                 <div id="ticker-selection" class="selector">
                     <select id="ticker-dropdown" class="selector-dropdown">
