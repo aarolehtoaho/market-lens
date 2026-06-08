@@ -27,6 +27,7 @@ async function loadWatchlist() {
     const tickers = await listTickers();
     selectedStocks = tickers;
     renderStocks();
+    fillTickerSelector();
 }
 
 async function loadInterests() {
@@ -138,6 +139,8 @@ function addStock(stock) {
     dropdown.hidden = true;
     dropdown.innerHTML = "";
     setUiStatus(`${stock.symbol} added`);
+
+    fillTickerSelector();
 }
 
 function setupStockSearch() {
@@ -231,6 +234,16 @@ function setupInterestInputs() {
 
         postInterest(currentFieldIndex, value);
     }, true);
+}
+
+function fillTickerSelector() {
+    const selector = document.getElementById("ticker-dropdown");
+    selectedStocks.forEach((stock) => {
+        const option = document.createElement("option");
+        option.value = stock.symbol;
+        option.textContent = `${stock.symbol} - ${stock.name}`;
+        selector.appendChild(option);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
