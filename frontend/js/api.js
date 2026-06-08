@@ -82,3 +82,26 @@ async function getOhlcv(symbol, period, interval) {
     }
     return response.json();
 }
+
+async function getChartOptions(symbol) {
+    uri = `/api/tickers/chart-options?symbol=${encodeURIComponent(symbol)}`;
+    const response = await fetch(uri);
+    if (!response.ok) {
+        return { period: "1d", interval: "5m" };
+    }
+    return response.json();
+}
+
+async function postChartOptions(symbol, period, interval) {
+    const response = await fetch("/api/tickers/chart-options", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            symbol: symbol,
+            period: period,
+            interval: interval,
+        }),
+    });
+}

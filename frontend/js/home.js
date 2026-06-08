@@ -247,6 +247,7 @@ function setupChartOptions() {
             if (isValidChartOptions()) {
                 ohlcvData = getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value);
                 console.log("Received OHLCV data: ", ohlcvData);
+                postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
             } else {
                 ohlcvData = null;
             }
