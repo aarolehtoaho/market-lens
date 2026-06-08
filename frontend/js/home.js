@@ -364,4 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupChartOptions();
     renderStocks();
     maybeAppendInterestInput();
+
+    loadPlotlyScript();
+    drawEmptyChart();
 });

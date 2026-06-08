@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarketLens - Stock Market Analysis</title>
     <link rel="stylesheet" href="/css/main.css">
+    <script src="https://cdn.plot.ly/plotly-3.6.0.min.js" charset="utf-8"></script>
 </head>
 <body>
     <header class="hero" id="hero">
@@ -89,6 +90,11 @@
                     </select>
                 </div>
             </div>
+
+            <div id="chart-area">
+                <div id="plotly-chart"></div>
+            </div>
+
         </div>
     </div>
 
@@ -114,6 +120,7 @@
     <div class="sr-only" id="ui-status" aria-live="polite"></div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/chart.js"></script>
     <script src="/js/home.js"></script>
 </body>
 </html>
