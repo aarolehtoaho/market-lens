@@ -6,6 +6,7 @@ DB_PATH = os.path.join(BASE_DIR, "data/market_lens.db")
 
 class Database:
     instance = None
+    conn: sqlite3.Connection
 
     def __new__(cls):
         if cls.instance is None:
@@ -35,7 +36,9 @@ class Database:
                 symbol TEXT NOT NULL UNIQUE,
                 name TEXT,
                 exchange TEXT,
-                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                period TEXT DEFAULT '1d',
+                interval TEXT DEFAULT '5m'
             )
         """)
         self.conn.commit()
@@ -101,3 +104,16 @@ class Database:
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM interests WHERE position = ?", (position,))
         self.conn.commit()
+
+    def setChartOptions(self, symbol: str, period: str, interval: str):
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE tickers SET period = ?, interval = ? WHERE symbol = ?", (period, interval, symbol))
+        self.conn.commit()
+
+    def getChartOptions(self, symbol: str) -> dict:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT period, interval FROM tickers WHERE symbol = ?", (symbol,))
+        row = cursor.fetchone()
+        if row:
+            return {"period": row[0], "interval": row[1]}
+        return {"period": "1d", "interval": "5m"}
