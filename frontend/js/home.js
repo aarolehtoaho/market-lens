@@ -2,6 +2,7 @@ const STOCK_LIMIT = 20;
 const INTEREST_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 1000;
 
+let ohlcvData = null;
 let selectedStocks = [];
 let debounceTimer = null;
 
@@ -236,6 +237,23 @@ function setupInterestInputs() {
     }, true);
 }
 
+function setupChartOptions() {
+    const tickerSelector = document.getElementById("ticker-dropdown");
+    const periodSelector = document.getElementById("period-dropdown");
+    const intervalSelector = document.getElementById("interval-dropdown");
+    
+    [tickerSelector, periodSelector, intervalSelector].forEach((selector) => {
+        selector.addEventListener("change", () => {
+            if (isValidChartOptions()) {
+                ohlcvData = getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value);
+                console.log("Received OHLCV data: ", ohlcvData);
+            } else {
+                ohlcvData = null;
+            }
+        });
+    });
+}
+
 function fillTickerSelector() {
     const selector = document.getElementById("ticker-dropdown");
     selectedStocks.forEach((stock) => {
@@ -251,9 +269,13 @@ function isValidChartOptions() {
     const periodSelector = document.getElementById("period-dropdown");
     const intervalSelector = document.getElementById("interval-dropdown");
 
-    tickerSelected = tickerSelector.value.trim() !== "";
-    periodSelected = periodSelector.value.trim() !== "";
-    intervalSelected = intervalSelector.value.trim() !== "";
+    ticker = tickerSelector.value;
+    interval = intervalSelector.value;
+    period = periodSelector.value;
+
+    tickerSelected = ticker.trim() !== "";
+    periodSelected = period.trim() !== "";
+    intervalSelected = interval.trim() !== "";
 
     if (!tickerSelected || !periodSelected || !intervalSelected) {
         return false;
@@ -295,6 +317,40 @@ function isValidChartOptions() {
         }
     }
 
+    // Check that interval is smaller than period
+    const intervalToMinutes = {
+        "1m": 1,
+        "2m": 2,
+        "5m": 5,
+        "15m": 15,
+        "30m": 30,
+        "60m": 60,
+        "90m": 90,
+        "1h": 60,
+        "1d": 1440,
+        "5d": 7200,
+        "1wk": 10080,
+        "1mo": 43200,
+    };
+
+    const periodToMinutes = {
+        "1d": 1440,
+        "5d": 7200,
+        "1mo": 43200,
+        "3mo": 129600,
+        "6mo": 259200,
+        "1y": 525600,
+        "2y": 1051200,
+        "5y": 2628000,
+        "10y": 5256000,
+        "ytd": (new Date() - new Date(new Date().getFullYear(), 0, 1)) / (1000 * 60),
+        "max": Infinity,
+    };
+
+    if (intervalToMinutes[interval] >= periodToMinutes[period]) {
+        return false;
+    }
+
     return true;
 }
 
@@ -304,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadInterests();
     setupStockSearch();
     setupInterestInputs();
+    setupChartOptions();
     renderStocks();
     maybeAppendInterestInput();
 });
