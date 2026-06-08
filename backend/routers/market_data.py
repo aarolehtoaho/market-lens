@@ -3,7 +3,7 @@ from backend.services.fetcher import fetch_ohlcv_data
 
 router = APIRouter()
 
-@router.get("/{symbol}")
+@router.get("/")
 async def get_ohlcv(symbol: str, period: str = "1mo", interval: str = "1d") -> dict[str, list[dict] | str]:
     """Fetch OHLCV data for a given symbol and time range."""
     try:

@@ -72,10 +72,11 @@ async function deleteInterest(position) {
 }
 
 async function getOhlcv(symbol, period, interval) {
-    const response = await fetch(`/api/market-data?
-        symbol=${encodeURIComponent(symbol)}&
-        period=${encodeURIComponent(period)}&
-        interval=${encodeURIComponent(interval)}`);
+    url = "/api/market-data/" +
+        "?symbol=" + encodeURIComponent(symbol) +
+        "&period=" + encodeURIComponent(period) +
+        "&interval=" + encodeURIComponent(interval);
+    const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Market data request failed with status ${response.status}`);
     }
