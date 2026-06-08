@@ -26,6 +26,10 @@ async def root():
     frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "index.html")
     return FileResponse(frontend_path)
 
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(static_dir, "favicon.ico"))
+
 @app.get("/api/home")
 async def get_home_data() -> dict:
     """Return home page data as JSON."""
