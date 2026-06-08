@@ -246,6 +246,58 @@ function fillTickerSelector() {
     });
 }
 
+function isValidChartOptions() {
+    const tickerSelector = document.getElementById("ticker-dropdown");
+    const periodSelector = document.getElementById("period-dropdown");
+    const intervalSelector = document.getElementById("interval-dropdown");
+
+    tickerSelected = tickerSelector.value.trim() !== "";
+    periodSelected = periodSelector.value.trim() !== "";
+    intervalSelected = intervalSelector.value.trim() !== "";
+
+    if (!tickerSelected || !periodSelected || !intervalSelected) {
+        return false;
+    }
+
+    // yfincance.Ticker.history() supports the following sets of period and interval values.
+    const validPeriods = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"];
+    const validIntervals = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo"];
+
+    if (!validPeriods.includes(periodSelector.value) || !validIntervals.includes(intervalSelector.value)) {
+        return false;
+    }
+
+    const isIntraday = interval.endsWith('m') || interval.endsWith('h');
+
+    if (isIntraday) {
+        // Intraday intervals have maximum period of 60 days
+        const invalidIntradayPeriods = ["3mo", "6mo", "1y", "2y", "5y", "10y", "max"];
+        if (invalidIntradayPeriods.includes(period)) {
+            return false;
+        }
+
+        // YTD must be within 60 days
+        if (period === "ytd") {
+            const now = new Date();
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const daysPassed = (now - startOfYear) / (1000 * 60 * 60 * 24);
+            if (daysPassed > 60) {
+                return false;
+            }
+        }
+
+        // 1m interval has maximum period of 7 days
+        if (interval === "1m") {
+            const valid1mPeriods = ["1d", "5d"];
+            if (!valid1mPeriods.includes(period)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     loadHomeData();
     loadWatchlist();
