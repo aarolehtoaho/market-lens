@@ -52,7 +52,7 @@ async function drawEmptyChart() {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false, rsi = false) {
+async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false, rsi = false, bollingerBands = false) {
     ohlcvData = await getOhlcv(symbol, period, interval, true);
 
     const dateKey =
@@ -189,6 +189,42 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
             line: { color: 'cyan', width: 1 },
         };
         data.push(rsiTrace);
+    }
+
+    if (bollingerBands) {
+        const upperValues = ohlcvData.data.map(entry => entry.BollingerUpper);
+        const middleValues = ohlcvData.data.map(entry => entry.SMA20);
+        const lowerValues = ohlcvData.data.map(entry => entry.BollingerLower);
+
+        const upperTrace = {
+            x: timestamps,
+            y: upperValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Bollinger Upper',
+            line: { color: 'red', width: 1 },
+        };
+        data.push(upperTrace);
+
+        const middleTrace = {
+            x: timestamps,
+            y: middleValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Bollinger Middle',
+            line: { color: 'blue', width: 1 },
+        };
+        data.push(middleTrace);
+
+        const lowerTrace = {
+            x: timestamps,
+            y: lowerValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Bollinger Lower',
+            line: { color: 'green', width: 1 },
+        };
+        data.push(lowerTrace);
     }
 
     const layout = {

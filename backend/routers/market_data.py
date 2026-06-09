@@ -11,6 +11,7 @@ async def get_ohlcv(symbol: str, period: str = "1mo", interval: str = "1d", prep
         ohlcv_data = addSMA(ohlcv_data)
         ohlcv_data = addVWAP(ohlcv_data)
         ohlcv_data = addRSI(ohlcv_data)
+        ohlcv_data = addBollingerBands(ohlcv_data)
         return {"data": ohlcv_data}
     except ValueError as e:
         return {"error": str(e)}
@@ -109,5 +110,22 @@ def addRSI(ohlcv_data, period=14):
         else:
             rs = avg_gain / avg_loss
             ohlcv_data[target_idx]['RSI'] = 100 - (100 / (1 + rs))
+
+    return ohlcv_data
+
+def addBollingerBands(ohlcv_data, period=20):
+    """Add Bollinger Bands to the OHLCV data."""
+    closes = [entry['Close'] for entry in ohlcv_data]
+
+    for i in range(len(ohlcv_data)):
+        if i >= period - 1:
+            sma = sum(closes[i-period+1:i+1]) / period
+            stddev = (sum((closes[j] - sma) ** 2 for j in range(i-period+1, i+1)) / period) ** 0.5
+            
+            ohlcv_data[i]['BollingerUpper'] = sma + (2 * stddev)
+            ohlcv_data[i]['BollingerLower'] = sma - (2 * stddev)
+        else:
+            ohlcv_data[i]['BollingerUpper'] = None
+            ohlcv_data[i]['BollingerLower'] = None
 
     return ohlcv_data
