@@ -14,28 +14,25 @@ async def get_ohlcv(symbol: str, period: str = "1mo", interval: str = "1d", prep
     except ValueError as e:
         return {"error": str(e)}
 
-def calculateSMA(data, period):
-    """Calculate Simple Moving Average (SMA) for the given data and period."""
-    sma = []
-    for i in range(len(data)):
-        not_enough_data = i < period - 1
-        if not_enough_data:
-            sma.append(None)
-        else:
-            sma.append(sum(data[i - period + 1:i + 1]) / period)
-    return sma
-
 def addSMA(ohlcv_data):
     """Add SMA20, SMA50, and SMA200 to the OHLCV data."""
     closes = [entry['Close'] for entry in ohlcv_data]
-    sma20 = calculateSMA(closes, 20)
-    sma50 = calculateSMA(closes, 50)
-    sma200 = calculateSMA(closes, 200)
 
     for i in range(len(ohlcv_data)):
-        ohlcv_data[i]['SMA20'] = sma20[i]
-        ohlcv_data[i]['SMA50'] = sma50[i]
-        ohlcv_data[i]['SMA200'] = sma200[i]
+        if i >= 19:
+            ohlcv_data[i]['SMA20'] = sum(closes[i-19:i+1]) / 20
+        else:
+            ohlcv_data[i]['SMA20'] = None
+        
+        if i >= 49:
+            ohlcv_data[i]['SMA50'] = sum(closes[i-49:i+1]) / 50
+        else:
+            ohlcv_data[i]['SMA50'] = None
+        
+        if i >= 199:
+            ohlcv_data[i]['SMA200'] = sum(closes[i-199:i+1]) / 200
+        else:
+            ohlcv_data[i]['SMA200'] = None
 
     return ohlcv_data
 
