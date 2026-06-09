@@ -52,7 +52,7 @@ async function drawEmptyChart() {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(symbol, period, interval, sma20 = false, sma50 = false, sma200 = false, vwap = false) {
+async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false) {
     ohlcvData = await getOhlcv(symbol, period, interval, true);
 
     const dateKey =
@@ -82,6 +82,20 @@ async function drawChart(symbol, period, interval, sma20 = false, sma50 = false,
     };
 
     const data = [candlesticks];
+
+    if (volumeBars) {
+        const priceRange = Math.max(...closes) - Math.min(...closes);
+
+        const volumeTrace = {
+            x: timestamps,
+            y: volumes,
+            type: 'bar',
+            name: 'Volume',
+            marker: {color: volumes.map((v, i) => volumeBarColor(opens[i], closes[i]))},
+            yaxis: 'y2',
+        };
+        data.push(volumeTrace);
+    }
 
     if (sma20) {
         const sma20Values = calculateSMA(closes, 20);
@@ -190,6 +204,16 @@ async function drawChart(symbol, period, interval, sma20 = false, sma50 = false,
             gridcolor: 'rgba(200, 200, 200, 0.5)',
             color: 'rgba(0, 0, 0, 0.5)',
         },
+        yaxis2: {
+            overlaying: 'y',
+            layer: 'below',
+            side: 'right',
+            visible: volumeBars,
+            showgrid: false,
+            ticks: '',
+            color: 'rgba(0, 0, 0, 0.5)',
+            domain: [0, 0.2],
+        },
     };
 
     const config = {
@@ -240,6 +264,16 @@ let cumulativePV = 0;
     });
 
     return vwapValues;
+}
+
+function volumeBarColor(open, close) {
+    if (close > open) {
+        return 'rgba(100, 255, 100, 0.5)';
+    } else if (close < open) {
+        return 'rgba(255, 100, 100, 0.5)';
+    } else {
+        return 'rgba(200, 200, 200, 0.5)';
+    }
 }
 
 function getTickFormat(interval) {
