@@ -71,7 +71,7 @@ async function deleteInterest(position) {
     });
 }
 
-async function getOhlcv(symbol, period, interval, prepost = false) {
+async function getMarketData(symbol, period, interval, prepost = false) {
     url = "/api/market-data/" +
         "?symbol=" + encodeURIComponent(symbol) +
         "&period=" + encodeURIComponent(period) +

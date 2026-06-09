@@ -2,7 +2,7 @@ const STOCK_LIMIT = 20;
 const INTEREST_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 1000;
 
-let ohlcvData = null;
+let marketData = null;
 let selectedStocks = [];
 let debounceTimer = null;
 
@@ -258,10 +258,10 @@ function setupChartOptions() {
             message = result.message;
             if (result.isValid) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
-                ohlcvData = await getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
-                drawChart(ohlcvData, indicatorToggles);
+                marketData = await getMarketData(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
+                drawChart(marketData, indicatorToggles);
             } else {
-                ohlcvData = null;
+                marketData = null;
                 drawEmptyChart(message);
             }
         });
@@ -271,8 +271,8 @@ function setupChartOptions() {
     indicatorCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", async () => {
             indicatorToggles[checkbox.id] = checkbox.checked;
-            if (ohlcvData) {
-                drawChart(ohlcvData, indicatorToggles);
+            if (marketData) {
+                drawChart(marketData, indicatorToggles);
             }
         });
     });

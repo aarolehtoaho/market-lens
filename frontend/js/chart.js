@@ -52,19 +52,19 @@ async function drawEmptyChart(message) {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(ohlcvData, indicatorToggles) {
+async function drawChart(marketData, indicatorToggles) {
     const dateKey =
-        ohlcvData.data[0].Datetime !== undefined
+        marketData.data[0].Datetime !== undefined
             ? 'Datetime'
             : 'Date';
 
-    const timestamps = ohlcvData.data.map(entry => new Date(entry[dateKey]));
-    const opens = ohlcvData.data.map(entry => entry.Open);
-    const highs = ohlcvData.data.map(entry => entry.High);
-    const lows = ohlcvData.data.map(entry => entry.Low);
-    const closes = ohlcvData.data.map(entry => entry.Close);
-    //const dividends = ohlcvData.data.map(entry => entry.Dividends);
-    //const stockSplits = ohlcvData.data.map(entry => entry["Stock Splits"]);
+    const timestamps = marketData.data.map(entry => new Date(entry[dateKey]));
+    const opens = marketData.data.map(entry => entry.Open);
+    const highs = marketData.data.map(entry => entry.High);
+    const lows = marketData.data.map(entry => entry.Low);
+    const closes = marketData.data.map(entry => entry.Close);
+    //const dividends = marketData.data.map(entry => entry.Dividends);
+    //const stockSplits = marketData.data.map(entry => entry["Stock Splits"]);
 
     const candlesticks = {
         x: timestamps,
@@ -80,7 +80,7 @@ async function drawChart(ohlcvData, indicatorToggles) {
     const data = [candlesticks];
 
     if (indicatorToggles['toggle-volume']) {
-        const volumes = ohlcvData.data.map(entry => entry.Volume);
+        const volumes = marketData.data.map(entry => entry.Volume);
         const volumeTrace = {
             x: timestamps,
             y: volumes,
@@ -93,10 +93,10 @@ async function drawChart(ohlcvData, indicatorToggles) {
     }
 
     if (indicatorToggles['toggle-sma20']) {
-        const sma20Values = ohlcvData.data.map(entry => entry.SMA20);
+        const sma20Entries = marketData.data.filter(entry => entry.SMA20 !== null);
         const sma20Trace = {
-            x: timestamps.slice(19),
-            y: sma20Values,
+            x: sma20Entries.map(entry => new Date(entry[dateKey])),
+            y: sma20Entries.map(entry => entry.SMA20),
             type: 'scatter',
             mode: 'lines',
             name: 'SMA 20',
@@ -106,10 +106,10 @@ async function drawChart(ohlcvData, indicatorToggles) {
     }
 
     if (indicatorToggles['toggle-sma50']) {
-        const sma50Values = ohlcvData.data.map(entry => entry.SMA50);
+        const sma50Entries = marketData.data.filter(entry => entry.SMA50 !== null);
         const sma50Trace = {
-            x: timestamps.slice(49),
-            y: sma50Values,
+            x: sma50Entries.map(entry => new Date(entry[dateKey])),
+            y: sma50Entries.map(entry => entry.SMA50),
             type: 'scatter',
             mode: 'lines',
             name: 'SMA 50',
@@ -119,10 +119,10 @@ async function drawChart(ohlcvData, indicatorToggles) {
     }
 
     if (indicatorToggles['toggle-sma200']) {
-        const sma200Values = ohlcvData.data.map(entry => entry.SMA200);
+        const sma200Entries = marketData.data.filter(entry => entry.SMA200 !== null);
         const sma200Trace = {
-            x: timestamps.slice(199),
-            y: sma200Values,
+            x: sma200Entries.map(entry => new Date(entry[dateKey])),
+            y: sma200Entries.map(entry => entry.SMA200),
             type: 'scatter',
             mode: 'lines',
             name: 'SMA 200',
@@ -133,7 +133,7 @@ async function drawChart(ohlcvData, indicatorToggles) {
 
     if (indicatorToggles['toggle-vwap']) {
         // VWAP is calculated only for regular market hours. Only regular market hours have volume != 0
-        const filtered = ohlcvData.data
+        const filtered = marketData.data
             .map(e => ({
                 time: new Date(e[dateKey]),
                 vwap: e.VWAP,
@@ -177,7 +177,7 @@ async function drawChart(ohlcvData, indicatorToggles) {
     }
 
     if (indicatorToggles['toggle-rsi']) {
-        const rsiValues = ohlcvData.data.map(entry => entry.RSI);
+        const rsiValues = marketData.data.map(entry => entry.RSI);
         const rsiTrace = {
             x: timestamps,
             y: rsiValues,
@@ -190,9 +190,9 @@ async function drawChart(ohlcvData, indicatorToggles) {
     }
 
     if (indicatorToggles['toggle-bollinger']) {
-        const upperValues = ohlcvData.data.map(entry => entry.BollingerUpper);
-        const middleValues = ohlcvData.data.map(entry => entry.SMA20);
-        const lowerValues = ohlcvData.data.map(entry => entry.BollingerLower);
+        const upperValues = marketData.data.map(entry => entry.BollingerUpper);
+        const middleValues = marketData.data.map(entry => entry.BollingerMiddle);
+        const lowerValues = marketData.data.map(entry => entry.BollingerLower);
 
         const upperTrace = {
             x: timestamps,

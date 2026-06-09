@@ -4,41 +4,41 @@ from backend.services.fetcher import fetch_ohlcv_data
 router = APIRouter()
 
 @router.get("/")
-async def get_ohlcv(symbol: str, period: str = "1mo", interval: str = "1d", prepost: bool = False) -> dict[str, list[dict] | str]:
-    """Fetch OHLCV data for a given symbol and time range."""
+async def get_data(symbol: str, period: str = "1mo", interval: str = "1d", prepost: bool = False) -> dict[str, list[dict] | str]:
+    """Fetch OHLCV and indicator data for a given symbol and time range."""
     try:
         ohlcv_data = fetch_ohlcv_data(symbol, period, interval, prepost)
-        ohlcv_data = addSMA(ohlcv_data)
-        ohlcv_data = addVWAP(ohlcv_data)
-        ohlcv_data = addRSI(ohlcv_data)
-        ohlcv_data = addBollingerBands(ohlcv_data)
-        return {"data": ohlcv_data}
+        data = addSMA(ohlcv_data)
+        data = addVWAP(data)
+        data = addRSI(data)
+        data = addBollingerBands(data)
+        return {"data": data}
     except ValueError as e:
         return {"error": str(e)}
 
-def addSMA(ohlcv_data):
+def addSMA(data):
     """Add SMA20, SMA50, and SMA200 to the OHLCV data."""
-    closes = [entry['Close'] for entry in ohlcv_data]
+    closes = [entry['Close'] for entry in data]
 
-    for i in range(len(ohlcv_data)):
+    for i in range(len(data)):
         if i >= 19:
-            ohlcv_data[i]['SMA20'] = sum(closes[i-19:i+1]) / 20
+            data[i]['SMA20'] = sum(closes[i-19:i+1]) / 20
         else:
-            ohlcv_data[i]['SMA20'] = None
+            data[i]['SMA20'] = None
         
         if i >= 49:
-            ohlcv_data[i]['SMA50'] = sum(closes[i-49:i+1]) / 50
+            data[i]['SMA50'] = sum(closes[i-49:i+1]) / 50
         else:
-            ohlcv_data[i]['SMA50'] = None
+            data[i]['SMA50'] = None
         
         if i >= 199:
-            ohlcv_data[i]['SMA200'] = sum(closes[i-199:i+1]) / 200
+            data[i]['SMA200'] = sum(closes[i-199:i+1]) / 200
         else:
-            ohlcv_data[i]['SMA200'] = None
+            data[i]['SMA200'] = None
 
-    return ohlcv_data
+    return data
 
-def addVWAP(ohlcv_data):
+def addVWAP(data):
     """
        Calculate Volume Weighted Average Price (VWAP) for the given data.
        VWAP is calculated only for regular market hours. All volume outside regular hours is 0.
@@ -47,7 +47,7 @@ def addVWAP(ohlcv_data):
     cumulative_volume = 0
     last_date = None
 
-    for entry in ohlcv_data:
+    for entry in data:
         datetype = 'Datetime' if 'Datetime' in entry else 'Date' if 'Date' in entry else None
         current_date = entry[datetype][:10] if datetype and isinstance(entry[datetype], str) else entry[datetype].date() if datetype else None
 
@@ -71,17 +71,17 @@ def addVWAP(ohlcv_data):
         else:
             entry['VWAP'] = None
 
-    return ohlcv_data
+    return data
 
-def addRSI(ohlcv_data, period=14):
+def addRSI(data, period=14):
     """Add RSI to the OHLCV data."""
-    regular_hours_data = [(idx, entry) for idx, entry in enumerate(ohlcv_data) if entry['Volume'] > 0]
+    regular_hours_data = [(idx, entry) for idx, entry in enumerate(data) if entry['Volume'] > 0]
 
-    for entry in ohlcv_data:
+    for entry in data:
         entry['RSI'] = None
 
     if len(regular_hours_data) <= period:
-        return ohlcv_data
+        return data
 
     gains = []
     losses = []
@@ -99,10 +99,10 @@ def addRSI(ohlcv_data, period=14):
 
     first_target_idx = regular_hours_data[period][0]
     if avg_loss == 0:
-        ohlcv_data[first_target_idx]['RSI'] = 100
+        data[first_target_idx]['RSI'] = 100
     else:
         rs = avg_gain / avg_loss
-        ohlcv_data[first_target_idx]['RSI'] = 100 - (100 / (1 + rs))
+        data[first_target_idx]['RSI'] = 100 - (100 / (1 + rs))
 
     for i in range(period, len(gains)):
         avg_gain = (avg_gain * (period - 1) + gains[i]) / period
@@ -111,26 +111,28 @@ def addRSI(ohlcv_data, period=14):
         target_idx = regular_hours_data[i + 1][0]
         
         if avg_loss == 0:
-            ohlcv_data[target_idx]['RSI'] = 100
+            data[target_idx]['RSI'] = 100
         else:
             rs = avg_gain / avg_loss
-            ohlcv_data[target_idx]['RSI'] = 100 - (100 / (1 + rs))
+            data[target_idx]['RSI'] = 100 - (100 / (1 + rs))
 
-    return ohlcv_data
+    return data
 
-def addBollingerBands(ohlcv_data, period=20):
+def addBollingerBands(data, period=20):
     """Add Bollinger Bands to the OHLCV data."""
-    closes = [entry['Close'] for entry in ohlcv_data]
+    closes = [entry['Close'] for entry in data]
 
-    for i in range(len(ohlcv_data)):
+    for i in range(len(data)):
         if i >= period - 1:
             sma = sum(closes[i-period+1:i+1]) / period
             stddev = (sum((closes[j] - sma) ** 2 for j in range(i-period+1, i+1)) / period) ** 0.5
             
-            ohlcv_data[i]['BollingerUpper'] = sma + (2 * stddev)
-            ohlcv_data[i]['BollingerLower'] = sma - (2 * stddev)
+            data[i]['BollingerUpper'] = sma + (2 * stddev)
+            data[i]['BollingerLower'] = sma - (2 * stddev)
+            data[i]['BollingerMiddle'] = sma
         else:
-            ohlcv_data[i]['BollingerUpper'] = None
-            ohlcv_data[i]['BollingerLower'] = None
+            data[i]['BollingerUpper'] = None
+            data[i]['BollingerLower'] = None
+            data[i]['BollingerMiddle'] = None
 
-    return ohlcv_data
+    return data
