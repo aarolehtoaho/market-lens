@@ -52,7 +52,7 @@ async function drawEmptyChart(message) {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(marketData, indicatorToggles) {
+async function drawChart(marketData, indicatorToggles, interval) {
     const dateKey =
         marketData.data[0].Datetime !== undefined
             ? 'Datetime'
@@ -63,6 +63,7 @@ async function drawChart(marketData, indicatorToggles) {
     const highs = marketData.data.map(entry => entry.High);
     const lows = marketData.data.map(entry => entry.Low);
     const closes = marketData.data.map(entry => entry.Close);
+    const volumes = marketData.data.map(entry => entry.Volume);
     //const dividends = marketData.data.map(entry => entry.Dividends);
     //const stockSplits = marketData.data.map(entry => entry["Stock Splits"]);
 
@@ -81,190 +82,37 @@ async function drawChart(marketData, indicatorToggles) {
     const data = [candlesticks];
 
     if (indicatorToggles['toggle-volume']) {
-        const volumes = marketData.data.map(entry => entry.Volume);
-        const volumeTrace = {
-            x: timestamps,
-            y: volumes,
-            type: 'bar',
-            name: 'Volume',
-            marker: {color: volumes.map((v, i) => volumeBarColor(opens[i], closes[i]))},
-            yaxis: 'y2',
-        };
-        data.push(volumeTrace);
+        data.push(getVolumeTrace(timestamps, volumes, opens, closes));
     }
-
     if (indicatorToggles['toggle-sma20']) {
-        const sma20Entries = marketData.data.filter(entry => entry.SMA20 !== null);
-        const sma20Trace = {
-            x: sma20Entries.map(entry => new Date(entry[dateKey])),
-            y: sma20Entries.map(entry => entry.SMA20),
-            type: 'scatter',
-            mode: 'lines',
-            name: 'SMA 20',
-            line: { color: 'blue', width: 1 },
-        };
-        data.push(sma20Trace);
+        data.push(getSma20Trace(marketData, dateKey));
     }
-
     if (indicatorToggles['toggle-sma50']) {
-        const sma50Entries = marketData.data.filter(entry => entry.SMA50 !== null);
-        const sma50Trace = {
-            x: sma50Entries.map(entry => new Date(entry[dateKey])),
-            y: sma50Entries.map(entry => entry.SMA50),
-            type: 'scatter',
-            mode: 'lines',
-            name: 'SMA 50',
-            line: { color: 'orange', width: 1 },
-        };
-        data.push(sma50Trace);
+        data.push(getSma50Trace(marketData, dateKey));
     }
-
     if (indicatorToggles['toggle-sma200']) {
-        const sma200Entries = marketData.data.filter(entry => entry.SMA200 !== null);
-        const sma200Trace = {
-            x: sma200Entries.map(entry => new Date(entry[dateKey])),
-            y: sma200Entries.map(entry => entry.SMA200),
-            type: 'scatter',
-            mode: 'lines',
-            name: 'SMA 200',
-            line: { color: 'purple', width: 1 },
-        };
-        data.push(sma200Trace);
+        data.push(getSma200Trace(marketData, dateKey));
     }
-
     if (indicatorToggles['toggle-vwap']) {
-        // VWAP is calculated only for regular market hours. Only regular market hours have volume != 0
-        const filtered = marketData.data
-            .map(e => ({
-                time: new Date(e[dateKey]),
-                vwap: e.VWAP,
-                volume: e.Volume,
-            }))
-            .filter(e => e.volume > 0);
-
-        if (filtered.length === 0) {
-            return;
-        }
-
-        const segmentedX = [];
-        const segmentedY = [];
-        let lastDateString = null;
-
-        filtered.forEach((entry, index) => {
-            const currentDateString = entry.time.toISOString().split('T')[0];
-
-            if (lastDateString !== null && currentDateString !== lastDateString) {
-                const gapTime1Min = new Date(filtered[index - 1].time.getTime() + 60 * 1000);
-                segmentedX.push(gapTime1Min);
-                segmentedY.push(null);
-            }
-
-            segmentedX.push(entry.time);
-            segmentedY.push(entry.vwap);
-
-            lastDateString = currentDateString;
-        });
-
-        const vwapTrace = {
-            x: segmentedX,
-            y: segmentedY,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'VWAP',
-            line: { color: 'magenta', width: 1.5 },
-            connectgaps: false,
-        };
-        data.push(vwapTrace);
+        data.push(getVwapTrace(marketData, dateKey));
     }
-
     if (indicatorToggles['toggle-rsi']) {
-        const rsiValues = marketData.data.map(entry => entry.RSI);
-        const rsiTrace = {
-            x: timestamps,
-            y: rsiValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'RSI',
-            line: { color: 'cyan', width: 1.5 },
-            yaxis: 'y4',
-        };
-        data.push(rsiTrace);
+        data.push(getRsiTrace(marketData, timestamps));
     }
-
     if (indicatorToggles['toggle-bollinger']) {
-        const upperValues = marketData.data.map(entry => entry.BollingerUpper);
-        const middleValues = marketData.data.map(entry => entry.BollingerMiddle);
-        const lowerValues = marketData.data.map(entry => entry.BollingerLower);
-
-        const upperTrace = {
-            x: timestamps,
-            y: upperValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Bollinger Upper',
-            line: { color: 'red', width: 1 },
-        };
-        data.push(upperTrace);
-
-        const middleTrace = {
-            x: timestamps,
-            y: middleValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Bollinger Middle',
-            line: { color: 'blue', width: 1 },
-        };
-        data.push(middleTrace);
-
-        const lowerTrace = {
-            x: timestamps,
-            y: lowerValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Bollinger Lower',
-            line: { color: 'green', width: 1 },
-        };
-        data.push(lowerTrace);
+        data.push(...getBollingerTraces(marketData, timestamps));
     }
-
     if (indicatorToggles['toggle-macd']) {
-        const macdValues = marketData.data.map(entry => entry.MACD);
-        const signalValues = marketData.data.map(entry => entry.MACD_Signal);
-        const histogramValues = marketData.data.map(entry => entry.MACD - entry.MACD_Signal);
-
-        const macdTrace = {
-            x: timestamps,
-            y: macdValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'MACD',
-            line: { color: '#007bff', width: 1.5 },
-            yaxis: 'y3',
-        };
-        data.push(macdTrace);
-
-        const signalTrace = {
-            x: timestamps,
-            y: signalValues,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'MACD Signal',
-            line: { color: '#ff7f0e', width: 1.5 },
-            yaxis: 'y3',
-        };
-        data.push(signalTrace);
-
-        const histogramTrace = {
-            x: timestamps,
-            y: histogramValues,
-            type: 'bar',
-            name: 'MACD Histogram',
-            marker: {color: histogramValues.map(v => v >= 0 ? 'rgba(100, 255, 100, 0.5)' : 'rgba(255, 100, 100, 0.5)')},
-            yaxis: 'y3',
-        };
-        data.push(histogramTrace);
+        data.push(...getMacdTraces(marketData, timestamps));
     }
 
+    const layout = getLayout(timestamps, indicatorToggles, interval);
+    const config = getConfig();
+    
+    await Plotly.newPlot('plotly-chart', data, layout, config);
+}
+
+function getLayout(timestamps, indicatorToggles, interval) {
     const layout = {
         paper_bgcolor: 'rgba(255, 255, 255)',
         plot_bgcolor: 'rgba(255, 255, 255)',
@@ -317,7 +165,10 @@ async function drawChart(marketData, indicatorToggles) {
             anchor: 'x',
         },
     };
+    return layout;
+}
 
+function getConfig() {
     const config = {
         responsive: false,
         displayModeBar: false,
@@ -326,8 +177,190 @@ async function drawChart(marketData, indicatorToggles) {
                                 'pan2d', 'lasso2d', 'autoScale2d', 'resetScale2d', 'zoomIn2d', 'zoomOut2d',
                                 'hoverClosestCartesian', 'hoverCompareCartesian', 'toggleHover', 'toggleSpikelines'],
     };
-    
-    await Plotly.newPlot('plotly-chart', data, layout, config);
+    return config;
+}
+
+function getVolumeTrace(timestamps, volumes, opens, closes) {
+        const volumeTrace = {
+            x: timestamps,
+            y: volumes,
+            type: 'bar',
+            name: 'Volume',
+            marker: {color: volumes.map((v, i) => volumeBarColor(opens[i], closes[i]))},
+            yaxis: 'y2',
+        };
+        return volumeTrace;
+}
+
+function getSma20Trace(marketData, dateKey) {
+    const sma20Entries = marketData.data.filter(entry => entry.SMA20 !== null);
+    const sma20Trace = {
+        x: sma20Entries.map(entry => new Date(entry[dateKey])),
+        y: sma20Entries.map(entry => entry.SMA20),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'SMA 20',
+        line: { color: 'blue', width: 1 },
+    };
+    return sma20Trace;
+}
+
+function getSma50Trace(marketData, dateKey) {
+    const sma50Entries = marketData.data.filter(entry => entry.SMA50 !== null);
+    const sma50Trace = {
+        x: sma50Entries.map(entry => new Date(entry[dateKey])),
+        y: sma50Entries.map(entry => entry.SMA50),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'SMA 50',
+        line: { color: 'orange', width: 1 },
+    };
+    return sma50Trace;
+}
+
+function getSma200Trace(marketData, dateKey) {
+    const sma200Entries = marketData.data.filter(entry => entry.SMA200 !== null);
+    const sma200Trace = {
+        x: sma200Entries.map(entry => new Date(entry[dateKey])),
+        y: sma200Entries.map(entry => entry.SMA200),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'SMA 200',
+        line: { color: 'purple', width: 1 },
+    };
+    return sma200Trace;
+}
+
+function getVwapTrace(marketData, dateKey) {
+    // VWAP is calculated only for regular market hours. Only regular market hours have volume != 0
+    const filtered = marketData.data
+        .map(e => ({
+            time: new Date(e[dateKey]),
+            vwap: e.VWAP,
+            volume: e.Volume,
+        }))
+        .filter(e => e.volume > 0);
+
+    if (filtered.length === 0) {
+        return;
+    }
+
+    const segmentedX = [];
+    const segmentedY = [];
+    let lastDateString = null;
+
+    filtered.forEach((entry, index) => {
+        const currentDateString = entry.time.toISOString().split('T')[0];
+
+        if (lastDateString !== null && currentDateString !== lastDateString) {
+            const gapTime1Min = new Date(filtered[index - 1].time.getTime() + 60 * 1000);
+            segmentedX.push(gapTime1Min);
+            segmentedY.push(null);
+        }
+
+        segmentedX.push(entry.time);
+        segmentedY.push(entry.vwap);
+
+        lastDateString = currentDateString;
+    });
+
+    const vwapTrace = {
+        x: segmentedX,
+        y: segmentedY,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'VWAP',
+        line: { color: 'magenta', width: 1.5 },
+        connectgaps: false,
+    };
+
+    return vwapTrace;
+}
+
+function getRsiTrace(marketData, timestamps) {
+    const rsiValues = marketData.data.map(entry => entry.RSI);
+    const rsiTrace = {
+        x: timestamps,
+        y: rsiValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'RSI',
+        line: { color: 'cyan', width: 1.5 },
+        yaxis: 'y4',
+    };
+    return rsiTrace;
+}
+
+function getBollingerTraces(marketData, timestamps) {
+    const upperValues = marketData.data.map(entry => entry.BollingerUpper);
+    const middleValues = marketData.data.map(entry => entry.BollingerMiddle);
+    const lowerValues = marketData.data.map(entry => entry.BollingerLower);
+
+    const upperTrace = {
+        x: timestamps,
+        y: upperValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Bollinger Upper',
+        line: { color: 'red', width: 1 },
+    };
+
+    const middleTrace = {
+        x: timestamps,
+        y: middleValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Bollinger Middle',
+        line: { color: 'blue', width: 1 },
+    };
+
+    const lowerTrace = {
+        x: timestamps,
+        y: lowerValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Bollinger Lower',
+        line: { color: 'green', width: 1 },
+    };
+
+    return [upperTrace, middleTrace, lowerTrace];
+}
+
+function getMacdTraces(marketData, timestamps) {
+    const macdValues = marketData.data.map(entry => entry.MACD);
+    const signalValues = marketData.data.map(entry => entry.MACD_Signal);
+    const histogramValues = marketData.data.map(entry => entry.MACD - entry.MACD_Signal);
+
+    const macdTrace = {
+        x: timestamps,
+        y: macdValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'MACD',
+        line: { color: '#007bff', width: 1.5 },
+        yaxis: 'y3',
+    };
+
+    const signalTrace = {
+        x: timestamps,
+        y: signalValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'MACD Signal',
+        line: { color: '#ff7f0e', width: 1.5 },
+        yaxis: 'y3',
+    };
+
+    const histogramTrace = {
+        x: timestamps,
+        y: histogramValues,
+        type: 'bar',
+        name: 'MACD Histogram',
+        marker: {color: histogramValues.map(v => v >= 0 ? 'rgba(100, 255, 100, 0.5)' : 'rgba(255, 100, 100, 0.5)')},
+        yaxis: 'y3',
+    };
+
+    return [macdTrace, signalTrace, histogramTrace];
 }
 
 function volumeBarColor(open, close) {

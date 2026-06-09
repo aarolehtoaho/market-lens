@@ -265,7 +265,7 @@ function setupChartOptions() {
                     message = error.message || "Error fetching market data";
                 }
                 
-                drawChart(marketData, indicatorToggles);
+                drawChart(marketData, indicatorToggles, intervalSelector.value);
                 return;
             }
             marketData = null;
@@ -278,7 +278,7 @@ function setupChartOptions() {
         checkbox.addEventListener("change", async () => {
             indicatorToggles[checkbox.id] = checkbox.checked;
             if (marketData) {
-                drawChart(marketData, indicatorToggles);
+                drawChart(marketData, indicatorToggles, intervalSelector.value);
             }
         });
     });
