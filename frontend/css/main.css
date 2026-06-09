@@ -289,6 +289,17 @@ body {
     box-sizing: border-box;
 }
 
+#indicator-toggles {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.toggle {
+    margin-right: 0.4rem;
+}
+
 #plotly-chart {
     width: 100%;
     height: 100%;
