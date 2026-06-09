@@ -5,6 +5,11 @@ const SEARCH_DEBOUNCE_MS = 1000;
 let selectedStocks = [];
 let debounceTimer = null;
 
+let displaySma20 = false;
+let displaySma50 = false;
+let displaySma200 = false;
+let displayVwap = true;
+
 function setUiStatus(message) {
     const status = document.getElementById("ui-status");
     if (status) {
@@ -245,7 +250,7 @@ function setupChartOptions() {
         selector.addEventListener("change", () => {
             if (isValidChartOptions()) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
-                drawChart(tickerSelector.value, periodSelector.value, intervalSelector.value);
+                drawChart(tickerSelector.value, periodSelector.value, intervalSelector.value, displaySma20, displaySma50, displaySma200, displayVwap);
             } else {
                 drawEmptyChart();
             }
