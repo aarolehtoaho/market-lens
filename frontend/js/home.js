@@ -2,7 +2,6 @@ const STOCK_LIMIT = 20;
 const INTEREST_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 1000;
 
-let ohlcvData = null;
 let selectedStocks = [];
 let debounceTimer = null;
 
@@ -245,11 +244,10 @@ function setupChartOptions() {
     [tickerSelector, periodSelector, intervalSelector].forEach((selector) => {
         selector.addEventListener("change", () => {
             if (isValidChartOptions()) {
-                ohlcvData = getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value);
-                console.log("Received OHLCV data: ", ohlcvData);
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
+                drawChart(tickerSelector.value, periodSelector.value, intervalSelector.value);
             } else {
-                ohlcvData = null;
+                drawEmptyChart();
             }
         });
     });
