@@ -2,16 +2,19 @@ const STOCK_LIMIT = 20;
 const INTEREST_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 1000;
 
+let ohlcvData = null;
 let selectedStocks = [];
 let debounceTimer = null;
 
-let displayVolumeBars = false;
-let displaySma20 = false;
-let displaySma50 = false;
-let displaySma200 = false;
-let displayVwap = false;
-let displayRsi = false;
-let displayBollingerBands = false;
+let indicatorToggles = {
+    'toggle-volume': false,
+    'toggle-sma20': false,
+    'toggle-sma50': false,
+    'toggle-sma200': false,
+    'toggle-vwap': false,
+    'toggle-rsi': false,
+    'toggle-bollinger': false,
+}
 
 function setUiStatus(message) {
     const status = document.getElementById("ui-status");
@@ -250,13 +253,24 @@ function setupChartOptions() {
     const intervalSelector = document.getElementById("interval-dropdown");
     
     [tickerSelector, periodSelector, intervalSelector].forEach((selector) => {
-        selector.addEventListener("change", () => {
+        selector.addEventListener("change", async () => {
             if (isValidChartOptions()) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
-                drawChart(tickerSelector.value, periodSelector.value, intervalSelector.value,
-                    displayVolumeBars, displaySma20, displaySma50, displaySma200, displayVwap, displayRsi, displayBollingerBands);
+                ohlcvData = await getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
+                drawChart(ohlcvData, indicatorToggles);
             } else {
+                ohlcvData = null;
                 drawEmptyChart();
+            }
+        });
+    });
+
+    const indicatorCheckboxes = document.querySelectorAll(".toggle");
+    indicatorCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", async () => {
+            indicatorToggles[checkbox.id] = checkbox.checked;
+            if (ohlcvData) {
+                drawChart(ohlcvData, indicatorToggles);
             }
         });
     });

@@ -52,9 +52,7 @@ async function drawEmptyChart() {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false, rsi = false, bollingerBands = false) {
-    ohlcvData = await getOhlcv(symbol, period, interval, true);
-
+async function drawChart(ohlcvData, indicatorToggles) {
     const dateKey =
         ohlcvData.data[0].Datetime !== undefined
             ? 'Datetime'
@@ -81,7 +79,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
 
     const data = [candlesticks];
 
-    if (volumeBars) {
+    if (indicatorToggles['toggle-volume']) {
         const volumes = ohlcvData.data.map(entry => entry.Volume);
         const volumeTrace = {
             x: timestamps,
@@ -94,7 +92,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(volumeTrace);
     }
 
-    if (sma20) {
+    if (indicatorToggles['toggle-sma20']) {
         const sma20Values = ohlcvData.data.map(entry => entry.SMA20);
         const sma20Trace = {
             x: timestamps.slice(19),
@@ -107,7 +105,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(sma20Trace);
     }
 
-    if (sma50) {
+    if (indicatorToggles['toggle-sma50']) {
         const sma50Values = ohlcvData.data.map(entry => entry.SMA50);
         const sma50Trace = {
             x: timestamps.slice(49),
@@ -120,7 +118,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(sma50Trace);
     }
 
-    if (sma200) {
+    if (indicatorToggles['toggle-sma200']) {
         const sma200Values = ohlcvData.data.map(entry => entry.SMA200);
         const sma200Trace = {
             x: timestamps.slice(199),
@@ -133,7 +131,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(sma200Trace);
     }
 
-    if (vwap) {
+    if (indicatorToggles['toggle-vwap']) {
         // VWAP is calculated only for regular market hours. Only regular market hours have volume != 0
         const filtered = ohlcvData.data
             .map(e => ({
@@ -178,7 +176,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(vwapTrace);
     }
 
-    if (rsi) {
+    if (indicatorToggles['toggle-rsi']) {
         const rsiValues = ohlcvData.data.map(entry => entry.RSI);
         const rsiTrace = {
             x: timestamps,
@@ -191,7 +189,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
         data.push(rsiTrace);
     }
 
-    if (bollingerBands) {
+    if (indicatorToggles['toggle-bollinger']) {
         const upperValues = ohlcvData.data.map(entry => entry.BollingerUpper);
         const middleValues = ohlcvData.data.map(entry => entry.SMA20);
         const lowerValues = ohlcvData.data.map(entry => entry.BollingerLower);
@@ -252,7 +250,7 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
             overlaying: 'y',
             layer: 'below',
             side: 'right',
-            visible: volumeBars,
+            visible: indicatorToggles['toggle-volume'],
             showgrid: false,
             ticks: '',
             color: 'rgba(0, 0, 0, 0.5)',
