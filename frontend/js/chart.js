@@ -1,5 +1,3 @@
-const { connect } = require("node:http2");
-
 async function drawEmptyChart() {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -261,7 +259,16 @@ function getTickFormat(interval) {
 }
 
 function loadPlotlyScript() {
-    const script = document.createElement('script');
-    script.src = "https://cdn.plot.ly/plotly-3.6.0.min.js";
-    document.head.appendChild(script);
+    return new Promise((resolve, reject) => {
+        if (window.Plotly) {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = "https://cdn.plot.ly/plotly-3.6.0.min.js";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Failed to load Plotly.js"));
+        document.head.appendChild(script);
+    });
 }

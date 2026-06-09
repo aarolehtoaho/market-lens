@@ -5,10 +5,10 @@ const SEARCH_DEBOUNCE_MS = 1000;
 let selectedStocks = [];
 let debounceTimer = null;
 
-let displaySma20 = false;
-let displaySma50 = false;
-let displaySma200 = false;
-let displayVwap = true;
+let displaySma20 = true;
+let displaySma50 = true;
+let displaySma200 = true;
+let displayVwap = false;
 
 function setUiStatus(message) {
     const status = document.getElementById("ui-status");
@@ -358,16 +358,21 @@ function isValidChartOptions() {
     return true;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     loadHomeData();
     loadWatchlist();
     loadInterests();
     setupStockSearch();
     setupInterestInputs();
-    setupChartOptions();
     renderStocks();
     maybeAppendInterestInput();
 
-    loadPlotlyScript();
-    drawEmptyChart();
+    try {
+        await loadPlotlyScript();
+
+        setupChartOptions();
+        drawEmptyChart();
+    } catch (error) {
+        console.error("Error loading Plotly:", error);
+    }
 });
