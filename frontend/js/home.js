@@ -254,13 +254,15 @@ function setupChartOptions() {
     
     [tickerSelector, periodSelector, intervalSelector].forEach((selector) => {
         selector.addEventListener("change", async () => {
-            if (isValidChartOptions()) {
+            result = isValidChartOptions();
+            message = result.message;
+            if (result.isValid) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
                 ohlcvData = await getOhlcv(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
                 drawChart(ohlcvData, indicatorToggles);
             } else {
                 ohlcvData = null;
-                drawEmptyChart();
+                drawEmptyChart(message);
             }
         });
     });
@@ -300,7 +302,7 @@ function isValidChartOptions() {
     intervalSelected = interval.trim() !== "";
 
     if (!tickerSelected || !periodSelected || !intervalSelected) {
-        return false;
+        return {isValid: false, message: "Select a ticker, period, and interval to view the chart"};
     }
 
     // yfincance.Ticker.history() supports the following sets of period and interval values.
@@ -308,33 +310,30 @@ function isValidChartOptions() {
     const validIntervals = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo"];
 
     if (!validPeriods.includes(periodSelector.value) || !validIntervals.includes(intervalSelector.value)) {
-        return false;
+        return {isValid: false, message: "Invalid period or interval selected"};
     }
 
     const isIntraday = interval.endsWith('m') || interval.endsWith('h');
 
     if (isIntraday) {
-        // Intraday intervals have maximum period of 60 days
         const invalidIntradayPeriods = ["3mo", "6mo", "1y", "2y", "5y", "10y", "max"];
         if (invalidIntradayPeriods.includes(period)) {
-            return false;
+            return {isValid: false, message: "Intraday intervals do not support periods longer than 60 days"};
         }
 
-        // YTD must be within 60 days
         if (period === "ytd") {
             const now = new Date();
             const startOfYear = new Date(now.getFullYear(), 0, 1);
             const daysPassed = (now - startOfYear) / (1000 * 60 * 60 * 24);
             if (daysPassed > 60) {
-                return false;
+                return {isValid: false, message: "YTD must be within 60 days, if interval is intraday"};
             }
         }
 
-        // 1m interval has maximum period of 7 days
         if (interval === "1m") {
             const valid1mPeriods = ["1d", "5d"];
             if (!valid1mPeriods.includes(period)) {
-                return false;
+                return {isValid: false, message: "1m interval only supports 1d and 5d periods"};
             }
         }
     }
@@ -370,10 +369,10 @@ function isValidChartOptions() {
     };
 
     if (intervalToMinutes[interval] >= periodToMinutes[period]) {
-        return false;
+        return {isValid: false, message: "Interval must be smaller than period"};
     }
 
-    return true;
+    return {isValid: true, message: ""};
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

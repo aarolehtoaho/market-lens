@@ -1,4 +1,4 @@
-async function drawEmptyChart() {
+async function drawEmptyChart(message) {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
@@ -26,7 +26,7 @@ async function drawEmptyChart() {
             color: 'rgba(0, 0, 0, 0.5)',
         },
         annotations: [{
-            text: "Select a ticker, period, and interval to view the chart",
+            text: message,
             xref: 'paper',
             yref: 'paper',
             showarrow: false,
