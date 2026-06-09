@@ -12,12 +12,12 @@ def search_tickers(query: str) -> list[dict]:
     return tickers
 
 # Function for fetching OHLCV data for a given ticker and time range
-def fetch_ohlcv_data(symbol: str, period: str = "1mo", interval: str = "1d") -> list[dict]:
+def fetch_ohlcv_data(symbol: str, period: str = "1mo", interval: str = "1d", prepost: bool = False) -> list[dict]:
     ticker = yf.Ticker(symbol)
     if ticker is None:
         raise ValueError(f"Ticker '{symbol}' not found.")
     
-    ohlcv_data = ticker.history(period=period, interval=interval)
+    ohlcv_data = ticker.history(period=period, interval=interval, prepost=prepost)
     if ohlcv_data.empty:
         raise ValueError(f"No OHLCV data found for ticker '{symbol}' with period '{period}' and interval '{interval}'.")
     

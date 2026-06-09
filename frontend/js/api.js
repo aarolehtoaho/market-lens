@@ -71,11 +71,12 @@ async function deleteInterest(position) {
     });
 }
 
-async function getOhlcv(symbol, period, interval) {
+async function getOhlcv(symbol, period, interval, prepost = false) {
     url = "/api/market-data/" +
         "?symbol=" + encodeURIComponent(symbol) +
         "&period=" + encodeURIComponent(period) +
-        "&interval=" + encodeURIComponent(interval);
+        "&interval=" + encodeURIComponent(interval) +
+        "&prepost=" + encodeURIComponent(prepost);
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Market data request failed with status ${response.status}`);
