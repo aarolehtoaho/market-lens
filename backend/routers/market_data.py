@@ -48,7 +48,12 @@ def addVWAP(ohlcv_data):
     last_date = None
 
     for entry in ohlcv_data:
-        current_date = entry['Datetime'][:10] if isinstance(entry['Datetime'], str) else entry['Datetime'].date()
+        datetype = 'Datetime' if 'Datetime' in entry else 'Date' if 'Date' in entry else None
+        current_date = entry[datetype][:10] if datetype and isinstance(entry[datetype], str) else entry[datetype].date() if datetype else None
+
+        if datetype is None:
+            entry['VWAP'] = None
+            continue
 
         if current_date != last_date and last_date is not None:
             cumulative_pv = 0
