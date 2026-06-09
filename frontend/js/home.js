@@ -14,6 +14,7 @@ let indicatorToggles = {
     'toggle-vwap': false,
     'toggle-rsi': false,
     'toggle-bollinger': false,
+    'toggle-macd': false,
 }
 
 function setUiStatus(message) {
@@ -258,12 +259,17 @@ function setupChartOptions() {
             message = result.message;
             if (result.isValid) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
-                marketData = await getMarketData(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
+                try {
+                    marketData = await getMarketData(tickerSelector.value, periodSelector.value, intervalSelector.value, true);
+                } catch (error) {
+                    message = error.message || "Error fetching market data";
+                }
+                
                 drawChart(marketData, indicatorToggles);
-            } else {
-                marketData = null;
-                drawEmptyChart(message);
+                return;
             }
+            marketData = null;
+            drawEmptyChart(message);
         });
     });
 

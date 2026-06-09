@@ -67,6 +67,7 @@ async function drawChart(marketData, indicatorToggles) {
     //const stockSplits = marketData.data.map(entry => entry["Stock Splits"]);
 
     const candlesticks = {
+        name: marketData.symbol,
         x: timestamps,
         open: opens,
         high: highs,
@@ -184,7 +185,8 @@ async function drawChart(marketData, indicatorToggles) {
             type: 'scatter',
             mode: 'lines',
             name: 'RSI',
-            line: { color: 'cyan', width: 1 },
+            line: { color: 'cyan', width: 1.5 },
+            yaxis: 'y4',
         };
         data.push(rsiTrace);
     }
@@ -225,14 +227,51 @@ async function drawChart(marketData, indicatorToggles) {
         data.push(lowerTrace);
     }
 
+    if (indicatorToggles['toggle-macd']) {
+        const macdValues = marketData.data.map(entry => entry.MACD);
+        const signalValues = marketData.data.map(entry => entry.MACD_Signal);
+        const histogramValues = marketData.data.map(entry => entry.MACD - entry.MACD_Signal);
+
+        const macdTrace = {
+            x: timestamps,
+            y: macdValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'MACD',
+            line: { color: '#007bff', width: 1.5 },
+            yaxis: 'y3',
+        };
+        data.push(macdTrace);
+
+        const signalTrace = {
+            x: timestamps,
+            y: signalValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'MACD Signal',
+            line: { color: '#ff7f0e', width: 1.5 },
+            yaxis: 'y3',
+        };
+        data.push(signalTrace);
+
+        const histogramTrace = {
+            x: timestamps,
+            y: histogramValues,
+            type: 'bar',
+            name: 'MACD Histogram',
+            marker: {color: histogramValues.map(v => v >= 0 ? 'rgba(100, 255, 100, 0.5)' : 'rgba(255, 100, 100, 0.5)')},
+            yaxis: 'y3',
+        };
+        data.push(histogramTrace);
+    }
+
     const layout = {
         paper_bgcolor: 'rgba(255, 255, 255)',
         plot_bgcolor: 'rgba(255, 255, 255)',
-        autosize: true,
         margin: {t: 20, r: 30, b: 20, l: 30},
-
-        hovermode: 'closest',
+        hovermode: 'x unified',
         showlegend: false,
+        autosize: true,
 
         xaxis: {
             type: 'date',
@@ -242,11 +281,12 @@ async function drawChart(marketData, indicatorToggles) {
             gridcolor: 'rgba(200, 200, 200, 0.5)',
             color: 'rgba(0, 0, 0, 0.5)',
         },
-        yaxis: {
+        yaxis: {  // Price axis
             gridcolor: 'rgba(200, 200, 200, 0.5)',
             color: 'rgba(0, 0, 0, 0.5)',
+            domain: indicatorToggles['toggle-macd'] || indicatorToggles['toggle-rsi'] ? [0.3, 1] : [0, 1],
         },
-        yaxis2: {
+        yaxis2: {  // Volume axis
             overlaying: 'y',
             layer: 'below',
             side: 'right',
@@ -254,7 +294,27 @@ async function drawChart(marketData, indicatorToggles) {
             showgrid: false,
             ticks: '',
             color: 'rgba(0, 0, 0, 0.5)',
-            domain: [0, 0.2],
+            domain: indicatorToggles['toggle-macd'] || indicatorToggles['toggle-rsi'] ? [0, 0.3] : [0, 1],
+        },
+        yaxis3: { // MACD axis
+            layer: 'below',
+            side: 'right',
+            visible: indicatorToggles['toggle-macd'],
+            showgrid: false,
+            ticks: '',
+            color: 'rgba(0, 0, 0, 0.5)',
+            domain: [0, 0.3],
+        },
+        yaxis4: { // RSI axis
+            layer: 'below',
+            side: 'left',
+            visible: indicatorToggles['toggle-rsi'],
+            showgrid: true,
+            color: 'rgba(0, 0, 0, 0.5)',
+            domain: [0, 0.3],
+            overlaying: indicatorToggles['toggle-macd'] ? 'y3' : undefined,
+            range: [0, 100],
+            anchor: 'x',
         },
     };
 

@@ -12,6 +12,7 @@ async def get_data(symbol: str, period: str = "1mo", interval: str = "1d", prepo
         data = addVWAP(data)
         data = addRSI(data)
         data = addBollingerBands(data)
+        data = addMACD(data)
         return {"data": data}
     except ValueError as e:
         return {"error": str(e)}
@@ -134,5 +135,68 @@ def addBollingerBands(data, period=20):
             data[i]['BollingerUpper'] = None
             data[i]['BollingerLower'] = None
             data[i]['BollingerMiddle'] = None
+
+    return data
+
+def addMACD(data, fast_period=12, slow_period=26, signal_period=9):
+    """Add MACD, MACD Signal and MACD Histogram to the OHLCV data."""
+    closes = [entry['Close'] for entry in data]
+    
+    ema_fast = []
+    ema_slow = []
+    macd_line = []
+
+    k_fast = 2 / (fast_period + 1)
+    k_slow = 2 / (slow_period + 1)
+    k_signal = 2 / (signal_period + 1)
+
+    for i in range(len(closes)):
+        if i < fast_period - 1:
+            ema_fast.append(None)
+        elif i == fast_period - 1:
+            ema_fast.append(sum(closes[:fast_period]) / fast_period)
+        else:
+            ema_fast.append((closes[i] - ema_fast[-1]) * k_fast + ema_fast[-1])
+
+        if i < slow_period - 1:
+            ema_slow.append(None)
+        elif i == slow_period - 1:
+            ema_slow.append(sum(closes[:slow_period]) / slow_period)
+        else:
+            ema_slow.append((closes[i] - ema_slow[-1]) * k_slow + ema_slow[-1])
+
+        if ema_fast[i] is not None and ema_slow[i] is not None:
+            macd_line.append(ema_fast[i] - ema_slow[i])
+        else:
+            macd_line.append(None)
+
+    valid_macd_values = [m for m in macd_line if m is not None]
+    
+    current_signal_ema = None
+    signal_counter = 0
+
+    for i in range(len(data)):
+        macd_val = macd_line[i]
+
+        if macd_val is None:
+            data[i]['MACD'] = None
+            data[i]['MACD_Signal'] = None
+            data[i]['MACD_Hist'] = None
+            continue
+
+        signal_counter += 1
+        data[i]['MACD'] = macd_val
+
+        if signal_counter == signal_period:
+            current_signal_ema = sum(valid_macd_values[:signal_period]) / signal_period
+            data[i]['MACD_Signal'] = current_signal_ema
+            data[i]['MACD_Hist'] = macd_val - current_signal_ema
+        elif signal_counter > signal_period:
+            current_signal_ema = (macd_val - current_signal_ema) * k_signal + current_signal_ema
+            data[i]['MACD_Signal'] = current_signal_ema
+            data[i]['MACD_Hist'] = macd_val - current_signal_ema
+        else:
+            data[i]['MACD_Signal'] = None
+            data[i]['MACD_Hist'] = None
 
     return data
