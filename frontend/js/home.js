@@ -10,6 +10,7 @@ let displaySma20 = false;
 let displaySma50 = false;
 let displaySma200 = false;
 let displayVwap = false;
+let displayRsi = false;
 
 function setUiStatus(message) {
     const status = document.getElementById("ui-status");
@@ -252,7 +253,7 @@ function setupChartOptions() {
             if (isValidChartOptions()) {
                 postChartOptions(tickerSelector.value, periodSelector.value, intervalSelector.value);
                 drawChart(tickerSelector.value, periodSelector.value, intervalSelector.value,
-                    displayVolumeBars, displaySma20, displaySma50, displaySma200, displayVwap);
+                    displayVolumeBars, displaySma20, displaySma50, displaySma200, displayVwap, displayRsi);
             } else {
                 drawEmptyChart();
             }

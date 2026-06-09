@@ -52,7 +52,7 @@ async function drawEmptyChart() {
     await Plotly.newPlot('plotly-chart', data, layout, config);
 }
 
-async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false) {
+async function drawChart(symbol, period, interval, volumeBars = false, sma20 = false, sma50 = false, sma200 = false, vwap = false, rsi = false) {
     ohlcvData = await getOhlcv(symbol, period, interval, true);
 
     const dateKey =
@@ -176,6 +176,19 @@ async function drawChart(symbol, period, interval, volumeBars = false, sma20 = f
             connectgaps: false,
         };
         data.push(vwapTrace);
+    }
+
+    if (rsi) {
+        const rsiValues = ohlcvData.data.map(entry => entry.RSI);
+        const rsiTrace = {
+            x: timestamps,
+            y: rsiValues,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'RSI',
+            line: { color: 'cyan', width: 1 },
+        };
+        data.push(rsiTrace);
     }
 
     const layout = {

@@ -10,6 +10,7 @@ async def get_ohlcv(symbol: str, period: str = "1mo", interval: str = "1d", prep
         ohlcv_data = fetch_ohlcv_data(symbol, period, interval, prepost)
         ohlcv_data = addSMA(ohlcv_data)
         ohlcv_data = addVWAP(ohlcv_data)
+        ohlcv_data = addRSI(ohlcv_data)
         return {"data": ohlcv_data}
     except ValueError as e:
         return {"error": str(e)}
@@ -63,5 +64,50 @@ def addVWAP(ohlcv_data):
             entry['VWAP'] = cumulative_pv / cumulative_volume
         else:
             entry['VWAP'] = None
+
+    return ohlcv_data
+
+def addRSI(ohlcv_data, period=14):
+    """Add RSI to the OHLCV data."""
+    regular_hours_data = [(idx, entry) for idx, entry in enumerate(ohlcv_data) if entry['Volume'] > 0]
+
+    for entry in ohlcv_data:
+        entry['RSI'] = None
+
+    if len(regular_hours_data) <= period:
+        return ohlcv_data
+
+    gains = []
+    losses = []
+    
+    for i in range(1, len(regular_hours_data)):
+        current_close = regular_hours_data[i][1]['Close']
+        prev_close = regular_hours_data[i-1][1]['Close']
+        change = current_close - prev_close
+        
+        gains.append(max(change, 0))
+        losses.append(max(-change, 0))
+
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+
+    first_target_idx = regular_hours_data[period][0]
+    if avg_loss == 0:
+        ohlcv_data[first_target_idx]['RSI'] = 100
+    else:
+        rs = avg_gain / avg_loss
+        ohlcv_data[first_target_idx]['RSI'] = 100 - (100 / (1 + rs))
+
+    for i in range(period, len(gains)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+        
+        target_idx = regular_hours_data[i + 1][0]
+        
+        if avg_loss == 0:
+            ohlcv_data[target_idx]['RSI'] = 100
+        else:
+            rs = avg_gain / avg_loss
+            ohlcv_data[target_idx]['RSI'] = 100 - (100 / (1 + rs))
 
     return ohlcv_data
