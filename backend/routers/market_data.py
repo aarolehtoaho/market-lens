@@ -1,7 +1,10 @@
+from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from backend.services.fetcher import fetch_ohlcv_data
+from backend.database import Database
 
 router = APIRouter()
+db = Database()
 
 @router.get("/")
 async def get_data(symbol: str, period: str = "1mo", interval: str = "1d", prepost: bool = False) -> dict[str, list[dict] | str]:
@@ -14,6 +17,39 @@ async def get_data(symbol: str, period: str = "1mo", interval: str = "1d", prepo
         data = addBollingerBands(data)
         data = addMACD(data)
         return {"data": data}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@router.get("/fetch-and-cache")
+async def fetch_and_cache_data(symbol: str, period: str = "1mo", interval: str = "1d", prepost: bool = False) -> dict[str, str]:
+    """Fetch OHLCV and indicator data for a given symbol and time range, cache it in the database."""
+    try:
+        ohlcv_data = fetch_ohlcv_data(symbol, period, interval, prepost)
+        data = addSMA(ohlcv_data)
+        data = addVWAP(data)
+        data = addRSI(data)
+        data = addBollingerBands(data)
+        data = addMACD(data)
+
+        # Separate the ohlcv and indicator data for caching
+        ohlcv_only_data = []
+        indicators_only_data = []
+        for entry in data:
+            ohlcv_entry = {
+                "Datetime": entry.get("Datetime") or entry.get("Date"),
+                "Open": entry["Open"],
+                "High": entry["High"],
+                "Low": entry["Low"],
+                "Close": entry["Close"],
+                "Volume": entry["Volume"]
+            }
+            ohlcv_only_data.append(ohlcv_entry)
+            indicators_only_data.append({k: v for k, v in entry.items() if k not in ohlcv_entry})
+
+        db.cache_ohlcv_data([{"symbol": symbol, "data": ohlcv_only_data, "updated_at": datetime.now()}])
+        db.cache_indicator_data([{"symbol": symbol, "data": indicators_only_data, "updated_at": datetime.now()}])
+
+        return {"message": "Data fetched and cached successfully"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

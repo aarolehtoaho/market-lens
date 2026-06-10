@@ -44,6 +44,13 @@ async def fetch_models(modelRequest: ModelRequest) -> dict:
 
     return {"models": models}
 
+@router.get("/configuration")
+def check_configuration() -> dict:
+    db = Database()
+    configurations = db.get_llm_configurations()
+    has_valid_configuration = configurations and len(configurations) > 0
+    return {"valid_configuration": has_valid_configuration}
+
 @router.post("/configuration")
 def save_configuration(configRequest: ConfigurationRequest) -> dict:
     provider = configRequest.provider.lower()
@@ -55,6 +62,6 @@ def save_configuration(configRequest: ConfigurationRequest) -> dict:
         db = Database()
         db.save_llm_configuration(provider, api_key, model)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save configuration: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"{str(e)}")
     
     return {"message": "Configuration saved successfully"}
