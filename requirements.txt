@@ -1,0 +1,6 @@
+fastapi[standard]
+openai
+anthropic
+ollama
+google-genai
+yfinance
