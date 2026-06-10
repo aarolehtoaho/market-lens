@@ -79,7 +79,7 @@ async function getMarketData(symbol, period, interval, prepost = false) {
         "&prepost=" + encodeURIComponent(prepost);
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`Market data request failed with status ${response.status}`);
+        throw new Error(`Market data request failed with status ${response.status}: ${await response.text()}`);
     }
     return response.json();
 }
@@ -114,4 +114,52 @@ async function getTickerInfo(symbols) {
         return {};
     }
     return response.json();
+}
+
+async function fetchModels(provider, apiKey) {
+    try {
+        const response = await fetch("/api/settings/models", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: apiKey,
+            }),
+        });
+        if (!response.ok) {
+            message = await response.text();
+            throw new Error(`${response.status} ${message}`);
+        }
+
+        data = await response.json();
+
+        return data.models;
+    } catch (error) {
+        throw new Error(`${error.message}`);
+    }
+}
+
+async function saveLLMConfiguration(provider, apiKey, model) {
+    try {
+        const response = await fetch("/api/settings/configuration", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: apiKey,
+                model: model,
+            }),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to save configuration: ${response.status} ${await response.text()}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        throw new Error(`Failed to save configuration: ${error.message}`);
+    }
 }

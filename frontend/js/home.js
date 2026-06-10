@@ -446,12 +446,107 @@ async function updatePriceCards() {
     priceCardContainer.style.display = "grid";
 }
 
+function setupAiConfiguration() {
+    const providerSelect = document.getElementById("ai-provider-dropdown");
+    const apiKeyInputContainer = document.getElementById("ai-api-key");
+    const apiKeyInput = document.getElementById("ai-api-key-input");
+    const modelSelectContainer = document.getElementById("ai-model-container");
+    const modelSelect = document.getElementById("ai-model-dropdown");
+    const saveButton = document.getElementById("save-api-key");
+    const messageParagraph = document.getElementById("ai-configuration-error");
+
+    providerSelect.addEventListener("change", async () => {
+        messageParagraph.style.display = "none";
+        noProviderSelected = providerSelect.value === "";
+        if (noProviderSelected) {
+            apiKeyInputContainer.style.display = "none";
+            modelSelectContainer.style.display = "none";
+            return;
+        }
+        if (providerSelect.value === "ollama") {
+            apiKeyInputContainer.style.display = "none";
+            // Fetch models for ollama immediately, since it doesn't require an API key
+            try {
+                const models = await fetchModels("ollama", "http://localhost:11434");
+                console.log("Fetched models for Ollama:", models);
+                modelSelect.innerHTML = "";
+                models.forEach(model => {
+                    const option = document.createElement("option");
+                    option.value = model;
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+                modelSelectContainer.style.display = "block";
+            } catch (error) {
+                messageParagraph.textContent = `Failed to fetch models for Ollama: ${error.message}`;
+                messageParagraph.style.display = "block";
+            }
+        } else {
+            apiKeyInputContainer.style.display = "block";
+        }
+    });
+
+    saveButton.addEventListener("click", async () => {
+        const provider = providerSelect.value;
+        const apiKey = apiKeyInput.value.trim();
+        messageParagraph.style.display = "none";
+
+        if (!provider) {
+            messageParagraph.textContent = "Please select a provider";
+            messageParagraph.style.display = "block";
+            return;
+        }
+
+        if (provider !== "ollama" && !apiKey) {
+            messageParagraph.textContent = "Please enter an API key";
+            messageParagraph.style.display = "block";
+            return;
+        }
+
+        try {
+            const models = await fetchModels(provider, apiKey);
+            modelSelect.innerHTML = "";
+            models.forEach(model => {
+                const option = document.createElement("option");
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+            modelSelectContainer.style.display = "block";
+        } catch (error) {
+            messageParagraph.textContent = error.message;
+            messageParagraph.style.display = "block";
+            modelSelectContainer.style.display = "none";
+        }
+    });
+
+    modelSelect.addEventListener("change", async () => {
+        messageParagraph.style.display = "none";
+        const selectedModel = modelSelect.value;
+        if (!selectedModel) {
+            messageParagraph.textContent = "Please select a model";
+            messageParagraph.style.display = "block";
+            return;
+        }
+
+        try {
+            const response = await saveLLMConfiguration(providerSelect.value, apiKeyInput.value.trim(), selectedModel);
+            messageParagraph.textContent = response.message || "Configuration saved successfully";
+            messageParagraph.style.display = "block";
+        } catch (error) {
+            messageParagraph.textContent = error.message;
+            messageParagraph.style.display = "block";
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     loadHomeData();
     loadWatchlist();
     loadInterests();
     setupStockSearch();
     setupInterestInputs();
+    setupAiConfiguration();
     renderStocks();
     maybeAppendInterestInput();
 
