@@ -163,3 +163,49 @@ async function saveLLMConfiguration(provider, apiKey, model) {
         throw new Error(`Failed to save configuration: ${error.message}`);
     }
 }
+
+async function checkLLMConfiguration() {
+    try {
+        const response = await fetch("/api/settings/configuration");
+        if (!response.ok) {
+            throw new Error(`${response.status} ${await response.text()}`);
+        }
+
+        data = await response.json();
+
+        return data.valid_configuration;
+    } catch (error) {
+        throw new Error(`Failed to check configuration: ${error.message}`);
+    }
+}
+
+async function cacheMarketData(symbol, period, interval, prepost = false) {
+    const url = "/api/market-data/fetch-and-cache" +
+        "?symbol=" + encodeURIComponent(symbol) +
+        "&period=" + encodeURIComponent(period) +
+        "&interval=" + encodeURIComponent(interval) +
+        "&prepost=" + encodeURIComponent(prepost);
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Cache market data request failed with status ${response.status}: ${await response.text()}`);
+    }
+    return true;
+}
+
+async function getAiAnalysis() {
+    try {
+        const response = await fetch("/api/analysis/generate", {
+            method: "POST",
+        });
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+        
+        analysis = await response.json();
+        analysis_str = analysis.analysis;
+        return analysis_str;     
+    } catch (error) {
+        throw new Error(`${error.message}`);
+    }
+}
