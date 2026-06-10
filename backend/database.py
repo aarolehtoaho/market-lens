@@ -53,6 +53,17 @@ class Database:
         """)
         self.conn.commit()
 
+        # Create a table for LLM configuration
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS llm_configuration (
+                provider TEXT PRIMARY KEY,
+                api_key TEXT NOT NULL,
+                model TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.conn.commit()
+
     def cache_ticker_search(self, query: str, results: list[dict]):
         cursor = self.conn.cursor()
         cursor.execute("INSERT OR REPLACE INTO ticker_cache (query, results) VALUES (?, ?)", (query, str(results)))
@@ -117,3 +128,23 @@ class Database:
         if row:
             return {"period": row[0], "interval": row[1]}
         return {"period": "1d", "interval": "5m"}
+
+    def save_llm_configuration(self, provider: str, api_key: str, model: str):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO llm_configuration (provider, api_key, model) 
+            VALUES (?, ?, ?)
+            ON CONFLICT(provider) DO UPDATE SET 
+                api_key=excluded.api_key, 
+                model=excluded.model, 
+                updated_at=CURRENT_TIMESTAMP
+        """, (provider, api_key, model))
+        self.conn.commit()
+
+    def get_llm_configuration(self, provider: str) -> dict | None:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT api_key, model FROM llm_configuration WHERE provider = ?", (provider,))
+        row = cursor.fetchone()
+        if row:
+            return {"api_key": row[0], "model": row[1]}
+        return None
