@@ -352,6 +352,11 @@ body {
     color: var(--muted);
 }
 
+.ai-configuration-container {
+    padding: 1.2rem clamp(1rem, 4vw, 3rem);
+    margin-top: 2rem;
+}
+
 @keyframes rise {
     from {
         opacity: 0;

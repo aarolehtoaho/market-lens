@@ -111,6 +111,30 @@
             </div>
 
         </div>
+
+        <div class="ai-configuration-container panel">
+            <h2 id="ai-configuration-heading">AI Configuration</h2>
+            <p class="panel-copy">Select an AI provider and model</p>
+                <div id="ai-provider-selection" class="selector">
+                    <select id="ai-provider-dropdown" class="selector-dropdown">
+                        <option value="">-- Select an AI provider --</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="gemini">Gemini</option>
+                        <option value="claude">Claude</option>
+                        <option value="ollama">Ollama (local)</option>
+                    </select>
+                </div>
+                <div id="ai-api-key" style="display: none;">
+                    <input type="password" id="ai-api-key-input" class="selector-dropdown" placeholder="Enter API key">
+                    <button id="save-api-key" class="button">Save</button> <!-- Saves API key, fetches models and makes model selection visible -->
+                </div>
+                <div id="ai-model-container" class="selector" style="display: none;">
+                    <select id="ai-model-dropdown" class="selector-dropdown">
+                        <option value="">-- Select a model --</option>
+                    </select>
+                </div>
+                <p id="ai-configuration-error" class="error-message" style="display: none;"></p>
+        </div>
     </div>
 
     <div id="bottom-container">
