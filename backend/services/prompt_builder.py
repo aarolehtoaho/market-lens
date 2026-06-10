@@ -5,6 +5,25 @@ def summarize_ohlcv(ohlcv: list[dict], n: int = 10) -> dict:
     """
     Convert raw OHLCV dict (keyed by date string) into a compact summary of key stats and recent candles.
     """
+    def period_local_extremas(rows, n: int) -> dict[str, list[dict]]:
+        """Identify local highs and lows within the period."""
+        extremas = {"highs": [], "lows": []}
+        last_high = float('-inf')
+        last_low = float('inf')
+
+        for r in rows:
+            if r["High"] > last_high:
+                extremas["highs"].append(r)
+                last_high = r["High"]
+            if r["Low"] < last_low:
+                extremas["lows"].append(r)
+                last_low = r["Low"]
+
+        extremas["highs"] = extremas["highs"][-n:]
+        extremas["lows"] = extremas["lows"][-n:]
+
+        return extremas
+
     if not ohlcv:
         return {}
 
@@ -35,6 +54,7 @@ def summarize_ohlcv(ohlcv: list[dict], n: int = 10) -> dict:
         "volume_vs_avg":      round(volumes[-1] / avg_vol, 2),
         "latest_close":       round(last_close, 2),
         "recent_candles":     "\n".join(recent_candles),
+        "local_extremas":     period_local_extremas(rows, n),
     }
 
 def summarize_indicators(indicators: dict, n: int) -> dict:
@@ -48,15 +68,21 @@ def summarize_indicators(indicators: dict, n: int) -> dict:
         return round(series, 4) if series is not None else None
 
     def trend(series, n=5):
-        """Describe recent trend direction from last N values."""
+        """
+        Describe recent trend direction from last N values.
+        'rising', 'falling', 'flat (change percentage)', or 'insufficient data'   
+        """
+        flat_threshold = 0.01
         if not isinstance(series, list) or len(series) < 2:
             return "insufficient data"
         recent = series[-n:]
-        if recent[-1] > recent[0]:
+        change_pct = (recent[-1] - recent[0]) / abs(recent[0]) if recent[0] != 0 else 0
+        if change_pct > flat_threshold:
             return "rising"
-        elif recent[-1] < recent[0]:
+        elif change_pct < -flat_threshold:
             return "falling"
-        return "flat"
+        else:
+            return f"flat ({round(change_pct * 100, 2)}%)"
 
     rsi_series = indicators.get("RSI", [])
     macd_series = indicators.get("MACD", [])
@@ -157,6 +183,8 @@ def build_prompt(
                 Period change:      {ohlcv_summary.get('period_change_pct')}%
                 Latest volume:      {ohlcv_summary.get('latest_volume'):,}
                 Volume vs avg:      {ohlcv_summary.get('volume_vs_avg')}x average
+                Recent local highs:  {', '.join(r['Date'] for r in ohlcv_summary.get('local_extremas', {}).get('highs', [])) or 'N/A'}
+                Recent local lows:   {', '.join(r['Date'] for r in ohlcv_summary.get('local_extremas', {}).get('lows', [])) or 'N/A'}
 
             Recent candles (last {summary_length}):
                 {ohlcv_summary.get('recent_candles', 'N/A')}
