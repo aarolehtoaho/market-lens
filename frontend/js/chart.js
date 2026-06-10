@@ -1,4 +1,4 @@
-async function drawEmptyChart(message) {
+async function drawEmptyChart(message="Select a ticker, period and interval to view the chart") {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
@@ -64,8 +64,10 @@ async function drawChart(marketData, indicatorToggles, interval) {
     const lows = marketData.data.map(entry => entry.Low);
     const closes = marketData.data.map(entry => entry.Close);
     const volumes = marketData.data.map(entry => entry.Volume);
-    //const dividends = marketData.data.map(entry => entry.Dividends);
-    //const stockSplits = marketData.data.map(entry => entry["Stock Splits"]);
+
+    const dividends = marketData.data.map(entry => entry.Dividends);
+    const stockSplits = marketData.data.map(entry => entry["Stock Splits"]);
+    const hasCorporateActions = dividends.some(d => d !== 0) || stockSplits.some(s => s !== 0);
 
     const candlesticks = {
         name: marketData.symbol,
@@ -104,6 +106,9 @@ async function drawChart(marketData, indicatorToggles, interval) {
     }
     if (indicatorToggles['toggle-macd']) {
         data.push(...getMacdTraces(marketData, timestamps));
+    }
+    if (hasCorporateActions) {
+        data.push(...getActionMarkers(marketData, dateKey));
     }
 
     const layout = getLayout(timestamps, indicatorToggles, interval);
@@ -361,6 +366,49 @@ function getMacdTraces(marketData, timestamps) {
     };
 
     return [macdTrace, signalTrace, histogramTrace];
+}
+
+function getActionMarkers(marketData, dateKey) {
+    const markers = [];
+
+    const filtered = marketData.data.filter(entry => 
+        (entry.Dividends && entry.Dividends !== 0) || 
+        (entry["Stock Splits"] && entry["Stock Splits"] !== 0)
+    );
+    
+    filtered.forEach(entry => {
+        const time = new Date(entry[dateKey]);
+        
+        if (entry.Dividends && entry.Dividends !== 0) {
+            markers.push({
+                x: [time],
+                y: [entry.Close],
+                text: [`Dividend: $${entry.Dividends}`],
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Dividend',
+                yaxis: 'y',
+                marker: { color: 'purple', size: 10, symbol: 'diamond' },
+                hoverinfo: 'text',
+            });
+        }
+        
+        if (entry["Stock Splits"] && entry["Stock Splits"] !== 0) {
+            markers.push({
+                x: [time],
+                y: [entry.Close],
+                text: [`Stock Split: ${entry["Stock Splits"]}`],
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Stock Split',
+                yaxis: 'y',
+                marker: { color: 'orange', size: 10, symbol: 'cross' },
+                hoverinfo: 'text'
+            });
+        }
+    });
+
+    return markers;
 }
 
 function volumeBarColor(open, close) {

@@ -23,6 +23,16 @@ def summarize_ohlcv(ohlcv: list[dict], n: int = 10) -> dict:
         extremas["lows"] = extremas["lows"][-n:]
 
         return extremas
+    
+    def corporate_actions_in_period(rows) -> list[dict]:
+        """Extract any corporate actions (dividends, splits) that occurred."""
+        actions = []
+        for r in rows:
+            if r.get("Dividends", 0) != 0:
+                actions.append({"type": "dividend", "date": r["Date"], "amount": r["Dividends"]})
+            if r.get("Stock Splits", 0) != 0:
+                actions.append({"type": "split", "date": r["Date"], "ratio": r["Stock Splits"]})
+        return actions
 
     if not ohlcv:
         return {}
@@ -45,7 +55,9 @@ def summarize_ohlcv(ohlcv: list[dict], n: int = 10) -> dict:
             f"L={r['Low']:.2f} C={r['Close']:.2f} V={int(r['Volume']):,}"
         )
 
-    return {
+    corporate_actions = corporate_actions_in_period(rows)
+
+    summary = {
         "period_high":        round(max(r["High"] for r in rows), 2),
         "period_low":         round(min(r["Low"]  for r in rows), 2),
         "period_change_pct":  round(period_change_pct, 2),
@@ -55,7 +67,10 @@ def summarize_ohlcv(ohlcv: list[dict], n: int = 10) -> dict:
         "latest_close":       round(last_close, 2),
         "recent_candles":     "\n".join(recent_candles),
         "local_extremas":     period_local_extremas(rows, n),
+        "corporate_actions":  corporate_actions if corporate_actions else "None",
     }
+
+    return summary
 
 def summarize_indicators(indicators: dict, n: int) -> dict:
     """
@@ -185,6 +200,9 @@ def build_prompt(
                 Volume vs avg:      {ohlcv_summary.get('volume_vs_avg')}x average
                 Recent local highs:  {', '.join(r['Date'] for r in ohlcv_summary.get('local_extremas', {}).get('highs', [])) or 'N/A'}
                 Recent local lows:   {', '.join(r['Date'] for r in ohlcv_summary.get('local_extremas', {}).get('lows', [])) or 'N/A'}
+
+            Corporate actions in period:
+                {ohlcv_summary.get('corporate_actions')}
 
             Recent candles (last {summary_length}):
                 {ohlcv_summary.get('recent_candles', 'N/A')}
