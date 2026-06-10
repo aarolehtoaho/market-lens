@@ -15,7 +15,10 @@ class GeminiService(LLMService):
         """Generate a response from the Gemini API based on the given prompt."""
         response = self.client.models.generate_content(
             model=model,
-            contents=prompt
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+            }
         )
 
         if not response or not response.text:
