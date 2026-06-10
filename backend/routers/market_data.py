@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from backend.services.fetcher import fetch_ohlcv_data
 
 router = APIRouter()
@@ -15,7 +15,7 @@ async def get_data(symbol: str, period: str = "1mo", interval: str = "1d", prepo
         data = addMACD(data)
         return {"data": data}
     except ValueError as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
 
 def addSMA(data):
     """Add SMA20, SMA50, and SMA200 to the OHLCV data."""

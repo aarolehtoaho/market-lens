@@ -5,7 +5,7 @@ class OllamaService(LLMService):
     """LLM service implementation for Ollama's API."""
     def __init__(self, api_key: str="http://localhost:11434"):
         """The api key represents the base url for the ollama server, e.g. http://localhost:11434"""
-        self.client = ollama.Client(base_url=api_key)
+        self.client = ollama.Client(host=api_key)
         self.base_url = api_key
 
     def generate_response(self, model: str, prompt: str) -> str:
