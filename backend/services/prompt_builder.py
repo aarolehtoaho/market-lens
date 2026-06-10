@@ -165,8 +165,8 @@ def build_prompt(
     ohlcv_data: dict[str, list[dict]],
     indicator_data: dict[str, dict],
     interest_list: list[str],
-    period: str,
-    interval: str,
+    periods: dict[str, str],
+    intervals: dict[str, str]
 ) -> str:
     summary_length = 10
 
@@ -184,6 +184,8 @@ def build_prompt(
         symbol   = ticker["symbol"]
         name     = ticker["name"]
         exchange = ticker["exchange"]
+        period = periods.get(symbol, "1d")
+        interval = intervals.get(symbol, "5m")
 
         ohlcv_summary = summarize_ohlcv(ohlcv_data.get(symbol, []), n=summary_length)
         ind_summary   = summarize_indicators(indicator_data.get(symbol, {}), n=summary_length)
