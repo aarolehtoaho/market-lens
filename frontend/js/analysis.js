@@ -113,7 +113,18 @@ async function displayAnalysis(analysis) {
 
         for (const finding of stock.key_findings) {
             const findingItem = document.createElement("li");
-            findingItem.innerHTML = `<strong>${finding.interest}:</strong> ${finding.finding} <em>(Signal: ${finding.signal}, Confidence: ${finding.confidence}, Evidence: ${finding.data_evidence})</em>`;
+            
+            const signalColor = finding.signal === "bearish" ? "red" : finding.signal === "bullish" ? "green" : "gray";
+            const confidenceColor = finding.confidence === "high" ? "green" : finding.confidence === "low" ? "red" : "orange";
+            const infoTextFontSize = "0.9em";
+
+            findingText = `<strong>${finding.interest}:</strong>`;  
+            findingText += `<br>${finding.finding}`;
+            findingText += `<br><span style="color: ${signalColor}; font-size: ${infoTextFontSize};">Signal: ${finding.signal}</span>`;
+            findingText += ` | <span style="color: ${confidenceColor}; font-size: ${infoTextFontSize};">Confidence: ${finding.confidence}</span>`;
+            findingText += ` | <span style="font-size: ${infoTextFontSize};">Evidence: ${finding.data_evidence}</span>`;
+            
+            findingItem.innerHTML = findingText;
             keyFindingsListElem.appendChild(findingItem);
         }
 
