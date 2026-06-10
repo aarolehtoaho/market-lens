@@ -53,6 +53,11 @@
     </main>
 
     <div id="chart-workspace">
+
+        <div class="price-card-container panel" style="display: none;">
+            <h2 id="price-card-heading">Price Information</h2>
+        </div>
+
         <div id="chart-container" class="panel">
             <h2 id="chart-heading">Chart View</h2>
             <p class="panel-copy">Select a ticker, period, and interval to view the chart. Selected period and interval will be used for the analysis. Default values are 1 Day and 5 Minutes.</p>
@@ -125,6 +130,16 @@
             <span class="stock-pill-name"></span>
             <button type="button" class="stock-remove" aria-label="Remove stock">Remove</button>
         </li>
+    </template>
+
+    <template id="price-card-template">
+        <span class="price-card">
+            <h3 class="price-card-symbol"></h3>
+            <p class="price-card-price"></p>
+            <p class="price-card-change"></p>
+            <p class="price-card-open"></p>
+            <p class="price-card-range"></p>
+        </span>
     </template>
 
     <div class="sr-only" id="ui-status" aria-live="polite"></div>

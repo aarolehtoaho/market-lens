@@ -40,6 +40,7 @@ async function loadWatchlist() {
     selectedStocks = tickers;
     renderStocks();
     fillTickerSelector();
+    updatePriceCards();
 }
 
 async function loadInterests() {
@@ -119,6 +120,7 @@ function renderStocks() {
             renderStocks();
             setUiStatus(`${stock.symbol} removed`);
             deleteTicker(stock.symbol);
+            fillTickerSelector();
         });
         list.appendChild(node);
     });
@@ -139,6 +141,7 @@ function addStock(stock) {
     }
 
     selectedStocks.push(stock);
+    updatePriceCards();
 
     listPosition = selectedStocks.length;
     postTicker(stock, listPosition);
@@ -286,6 +289,12 @@ function setupChartOptions() {
 
 function fillTickerSelector() {
     const selector = document.getElementById("ticker-dropdown");
+
+    // Clear existing options except the placeholder
+    while (selector.options.length > 1) {
+        selector.remove(1);
+    }
+
     selectedStocks.forEach((stock) => {
         const option = document.createElement("option");
         option.value = stock.symbol;
@@ -381,6 +390,62 @@ function isValidChartOptions() {
     return {isValid: true, message: ""};
 }
 
+async function updatePriceCards() {
+    const priceCardContainer = document.querySelector(".price-card-container");
+
+    const isWatchlistEmpty = selectedStocks.length === 0;
+    if (isWatchlistEmpty) {
+        priceCardContainer.style.display = "none";
+        return;
+    }
+    
+    const template = document.getElementById("price-card-template");
+
+    const symbols = selectedStocks.map(stock => stock.symbol);
+    const tickerInfo = await getTickerInfo(symbols);
+
+    // Symbols ordered by price change percent in descending order
+    symbols.sort((a, b) => {
+        const changeA = tickerInfo[a]?.price_change_percent || 0;
+        const changeB = tickerInfo[b]?.price_change_percent || 0;
+        return changeB - changeA;
+    });
+
+    priceCardContainer.innerHTML = "";
+    symbols.forEach(symbol => {
+        const info = tickerInfo[symbol];
+        if (!info) {
+            return;
+        }
+
+        const priceChangeSign = info.price_change >= 0 ? "+" : "";
+
+        const price = parseFloat(info.current_price).toFixed(2);
+        const priceChange = parseFloat(info.price_change).toFixed(2);
+        const priceChangePercent = parseFloat(info.price_change_percent).toFixed(2);
+        const openPrice = parseFloat(info.open).toFixed(2);
+        const lowPrice = parseFloat(info.low).toFixed(2);
+        const highPrice = parseFloat(info.high).toFixed(2);
+
+        const node = template.content.firstElementChild.cloneNode(true);
+        node.querySelector(".price-card-symbol").textContent = symbol;
+        node.querySelector(".price-card-price").textContent = `${price} ${info.currency}`;
+        node.querySelector(".price-card-change").textContent = `${priceChangeSign}${priceChange} (${priceChangePercent}%)`;
+        node.querySelector(".price-card-open").textContent = `Open: ${openPrice} ${info.currency}`;
+        node.querySelector(".price-card-range").textContent = `Day's Range: ${lowPrice} - ${highPrice}`;
+
+        if (info.price_change >= 0) {
+            node.querySelector(".price-card-change").classList.add("positive");
+        } else {
+            node.querySelector(".price-card-change").classList.add("negative");
+        }
+
+        priceCardContainer.appendChild(node);
+    });
+    
+    priceCardContainer.style.display = "grid";
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     loadHomeData();
     loadWatchlist();
@@ -389,6 +454,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupInterestInputs();
     renderStocks();
     maybeAppendInterestInput();
+
+    setInterval(updatePriceCards, 60000);
 
     try {
         await loadPlotlyScript();

@@ -274,7 +274,7 @@ body {
     justify-content: center;
     padding-bottom: 2rem;
 }
-/*The chart inside, must fit inside the container*/
+
 #chart-area {
     margin-top: 1.5rem;
     width: 100%;
@@ -303,6 +303,53 @@ body {
 #plotly-chart {
     width: 100%;
     height: 100%;
+}
+
+.price-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    padding: 1.2rem clamp(1rem, 4vw, 3rem);
+    margin-bottom: 3rem;
+}
+
+.price-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(5, 20, 26, 0.24);
+    padding: 1rem;
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.price-card-symbol {
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.price-card-price {
+    font-size: 1.1rem;
+}
+
+.price-card-change {
+    font-size: 0.9rem;
+}
+
+.price-card-change.positive {
+    color: #2a7a2a;
+}
+
+.price-card-change.negative {
+    color: var(--danger);
+}
+
+.price-card-open,
+.price-card-range {
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 
 @keyframes rise {

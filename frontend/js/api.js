@@ -106,3 +106,12 @@ async function postChartOptions(symbol, period, interval) {
         }),
     });
 }
+
+async function getTickerInfo(symbols) {
+    const url = "/api/tickers/info?" + symbols.map(s => "symbols=" + encodeURIComponent(s)).join("&");
+    const response = await fetch(url);
+    if (!response.ok) {
+        return {};
+    }
+    return response.json();
+}
