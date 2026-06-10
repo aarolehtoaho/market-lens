@@ -38,8 +38,8 @@ Reports are stored in the database so you can browse historical runs.
 A settings page lets you configure:
 - Which LLM provider to use (Claude, OpenAI, Gemini, Ollama)
 - API key (stored locally, never sent anywhere except the provider)
-- Model name (e.g. `claude-sonnet-4-20250514`, `gpt-4o`, `llama3`)
-- For local Ollama: the base URL (e.g. `http://localhost:11434`)
+- Model name (all available models fetched with API)
+- For local Ollama: no API key or URL is needed
 
 ---
 
@@ -70,7 +70,7 @@ Backend assembles structured prompt (data + findings + interests)
 LLM router sends prompt to chosen provider
         │
         ▼
-Markdown report stored in DB + rendered in browser
+JSON report stored in DB + rendered in browser
 ```
 
 ## Tech Stack
@@ -94,3 +94,40 @@ Markdown report stored in DB + rendered in browser
 | Data visualization | plotly.js |
 
 ---
+
+## Database Architecture
+
+MarketLens uses a local SQLite database. The schema is divided into user data/preferences and caching tables.
+
+### User Data & Configuration
+| Table | Description | Key Columns |
+|---|---|---|
+| `tickers` | The user's watchlist. | `position` (PK), `symbol` (Unique), `name`, `exchange`, `period`, `interval`, `added_at` |
+| `interests` | The specific technical patterns the AI should look for. | `position` (PK), `interest` (Unique), `added_at` |
+| `llm_configuration` | Stores credentials and model choices for the AI provider. | `provider` (PK), `api_key`, `model`, `updated_at` |
+
+### Caching System
+All heavy or repeated external requests are cached as JSON strings.
+
+| Table | Description | Key Columns |
+|---|---|---|
+| `ticker_cache` | Caches yfinance ticker search results. | `query` (PK), `results` |
+| `ohlcv_cache` | Stores the raw historical Open/High/Low/Close/Volume data. | `symbol` (PK), `data`, `updated_at` |
+| `indicator_cache` | Stores pre-computed technical indicators (SMA, MACD, etc.). | `symbol` (PK), `data`, `updated_at` |
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.11+
+
+### Installation
+
+   ```bash
+   git clone git@github.com:aarolehtoaho/market-lens.git
+   cd market-lens
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   fastapi run backend/main.py
