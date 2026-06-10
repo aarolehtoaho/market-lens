@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from backend.services.fetcher import search_tickers
+from backend.services.fetcher import search_tickers, get_watchlist_info
 from backend.database import Database
 
 router = APIRouter()
@@ -17,6 +17,10 @@ class ChartOptions(BaseModel):
     period: str
     interval: str
 
+@router.get("/")
+async def list_tickers() -> list[dict]:
+    return db.list_tickers()
+
 @router.get("/search")
 async def search(q: str = Query(min_length=1)) -> list[dict]:
     cached_tickers = db.search_cached_tickers(q)
@@ -28,9 +32,9 @@ async def search(q: str = Query(min_length=1)) -> list[dict]:
 
     return results
 
-@router.get("/")
-async def list_tickers() -> list[dict]:
-    return db.list_tickers()
+@router.get("/info")
+async def get_ticker_info(symbols: list[str] = Query(...)) -> dict[str, dict]:
+    return get_watchlist_info(symbols)
 
 @router.post("/")
 async def add_ticker(ticker_data: TickerItem):
