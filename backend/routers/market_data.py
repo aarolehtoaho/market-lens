@@ -32,8 +32,8 @@ async def fetch_and_cache_data(symbol: str, period: str = "1mo", interval: str =
         data = addMACD(data)
 
         # Separate the ohlcv and indicator data for caching
-        ohlcv_only_data = []
-        indicators_only_data = []
+        ohlcv_only_data: list[dict[str, float]] = []
+        indicators_only_data: list[dict[str, list[dict[str, float]]]] = []
         for entry in data:
             ohlcv_entry = {
                 "Datetime": entry.get("Datetime") or entry.get("Date"),

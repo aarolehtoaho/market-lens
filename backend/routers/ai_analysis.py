@@ -14,7 +14,7 @@ async def generate_analysis() -> dict:
     tickers: list[dict[str, str]] = db.list_tickers()
     interest_list: list[str] = [interest["interest"] for interest in db.list_interests()]
     ohlcv_data: dict[str, list[dict]] = {}
-    indicator_data: dict[str, dict] = {}
+    indicator_data: dict[str, list[dict[str, float]]] = {}
     periods: dict[str, str] = {}
     intervals: dict[str, str] = {}
 
@@ -43,7 +43,7 @@ async def generate_analysis() -> dict:
         raise HTTPException(status_code=400, detail="No LLM configuration found. Please set up a valid configuration in the settings.")
     newest_config = llm_configurations[0]
     provider = newest_config["provider"].lower()
-    model = newest_config["model"]
+    model = newest_config["model"].strip()
     api_key = newest_config["api_key"]
 
     llm_service = None
@@ -52,14 +52,18 @@ async def generate_analysis() -> dict:
     elif "claude" in provider:
         llm_service = ClaudeService(api_key)
     elif "gemini" in provider:
+        if model.startswith("models/"):
+            model = model.replace("models/", "", 1)
         llm_service = GeminiService(api_key)
     elif "ollama" in provider:
         llm_service = OllamaService(api_key)
     else:
         raise HTTPException(status_code=400, detail="Unsupported LLM model configured. Please check your settings.")
     
+    analysis = ""
     try:
-        analysis = llm_service.generate_response(prompt, model)
-        return {"analysis": analysis}
+        analysis = llm_service.generate_response(model, prompt)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate analysis: {str(e)}")
+
+    return {"analysis": analysis}
