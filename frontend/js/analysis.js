@@ -29,7 +29,7 @@ async function checkStoredData() {
     subtitle.textContent = "Checking AI configuration...";
     try {
         const llmConfigured = await checkLLMConfiguration();
-        if (!llmConfigured.valid_configuration) {
+        if (!llmConfigured) {
             subtitle.textContent = "No valid AI configuration found. Please go to the main page to configure your AI provider and model.";
             return false;
         }
@@ -57,17 +57,44 @@ async function createAnalysis() {
     const subtitle = document.getElementById("subtitle");
     subtitle.textContent = "Generating analysis...";
 
+    analysis_str = "";
     try {
-        const analysis_str = await getAiAnalysis();
-        const analysis = JSON.parse(analysis_str);
-        return analysis;
+        analysis_str = await getAiAnalysis();
     } catch (error) {
         subtitle.textContent = `Error generating analysis: ${error.message}`;
         return null;
     }
+
+    analysis_cleaned = cleanJsonString(analysis_str);
+
+    try {
+        const analysis = JSON.parse(analysis_cleaned);
+        subtitle.textContent = "Analysis generated successfully!";
+        return analysis;
+    } catch (error) {
+        subtitle.textContent = `Error parsing analysis: ${error.message}`;
+        console.log("Raw analysis string:", analysis_str);
+        console.log("Cleaned analysis string:", analysis_cleaned);
+        return null;
+    }
+}
+
+function cleanJsonString(jsonString) {
+    // Remove any characters before the first '{' and after the last '}'
+    const firstBraceIndex = jsonString.indexOf('{');
+    const lastBraceIndex = jsonString.lastIndexOf('}');
+    
+    if (firstBraceIndex === -1 || lastBraceIndex === -1 || lastBraceIndex < firstBraceIndex) {
+        throw new Error("Invalid JSON format: No valid JSON object found.");
+    }
+    
+    return jsonString.substring(firstBraceIndex, lastBraceIndex + 1);
 }
 
 async function displayAnalysis(analysis) {
+    const analysisPanel = document.getElementById("panel-analysis");
+    analysisPanel.style.display = "block";
+
     const analysisSummaryElem = document.getElementById("analysis-summary");
     const analysisResultsElem = document.getElementById("analysis-results");
     const tickerAnalysisTemplate = document.getElementById("ticker-analysis-template");
@@ -78,7 +105,7 @@ async function displayAnalysis(analysis) {
         const tickerElem = tickerAnalysisTemplate.content.cloneNode(true);
         const tickerNameElem = tickerElem.querySelector(".ticker-name");
         const tickerSummaryElem = tickerElem.querySelector(".ticker-summary");
-        const keyFindingsListElem = tickerElem.querySelector(".key-findings-list");
+        const keyFindingsListElem = tickerElem.querySelector(".findings-list");
         const watchpointsListElem = tickerElem.querySelector(".watchpoints-list");
 
         tickerNameElem.textContent = stock.symbol;
