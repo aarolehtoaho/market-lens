@@ -10,8 +10,40 @@
     <header class="hero" id="hero">
         <div class="hero-content">
             <h1 class="title" id="title">MarketLens</h1>
-            <p class="subtitle" id="subtitle">This page is under construction. Please check back later for analysis results.</p>
+            <p class="subtitle" id="subtitle">Loading...</p>
         </div>
     </header>
+
+    <main class="analysis-workspace" id="analysis-workspace">
+        <section class="panel panel-analysis" aria-labelledby="analysis-heading">
+            <h2 id="analysis-heading">Analysis Results</h2>
+            <p class="panel-copy"></p>
+            <h3 id="analysis-summary"></h3>
+            <div id="analysis-results" class="analysis-results">
+                <!-- Analysis results will be dynamically inserted here for each ticker -->
+            </div>
+        </section>
+    </main>
+
+    <template id="ticker-analysis-template">
+        <div class="ticker-analysis">
+            <h4 class="ticker-name"></h4>
+            <p class="ticker-summary"></p>
+            <div class="key-findings">
+                <h5>Key Findings:</h5>
+                <ul class="findings-list">
+                    <!-- Key findings will be dynamically inserted here. Contains information about related interest, finding, signal, confidence, and data evidence -->
+                </ul>
+            </div>
+            <div class="watchpoints">
+                <h5>Watchpoints:</h5>
+                <ul class="watchpoints-list">
+                    <!-- Watchpoints will be dynamically inserted here. -->
+                </ul>
+            </div>
+        </div>
+    </template>
+
+    <script src="/js/analysis.js"></script>
 </body>
 </html>

@@ -93,6 +93,11 @@ body {
     font-size: 1.45rem;
 }
 
+.panel h3 {
+    font-size: 1.15rem;
+    margin-top: 0.8rem;
+}
+
 .panel-copy {
     margin-top: 0.4rem;
     color: var(--muted);
@@ -356,6 +361,65 @@ body {
     padding: 1.2rem clamp(1rem, 4vw, 3rem);
     margin-top: 2rem;
 }
+
+
+.analysis-workspace {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 2rem clamp(1rem, 4vw, 3rem) 3rem;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.analysis-results {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(5, 20, 26, 0.24);
+    padding: 1.2rem;
+    backdrop-filter: blur(3px);
+}
+
+.ticker-analysis {
+    margin-top: 1rem;
+}
+
+.ticker-analysis h4 {
+    font-size: 1.1rem;
+}
+
+.ticker-analysis h5 {
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.ticker-analysis p {
+    margin-top: 0.4rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.key-findings {
+    margin-top: 1.2rem;
+}
+
+.findings-list {
+    list-style: disc;
+    margin-left: 1.6rem;
+    margin-top: 0.6rem;
+}
+
+.watchpoints {
+    margin-top: 1.2rem;
+}
+
+.watchpoints-list {
+    list-style: disc;
+    margin-left: 1.6rem;
+    margin-top: 0.6rem;
+}
+
 
 @keyframes rise {
     from {
