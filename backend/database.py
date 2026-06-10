@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data/market_lens.db")
@@ -153,14 +154,14 @@ class Database:
         cursor = self.conn.cursor()
         for entry in data:
             cursor.execute("INSERT OR REPLACE INTO ohlcv_cache (symbol, data, updated_at) VALUES (?, ?, ?)", 
-                           (entry["symbol"], str(entry["data"]), entry["updated_at"]))
+                           (entry["symbol"], json.dumps(entry["data"], default=str), entry["updated_at"]))
         self.conn.commit()
 
     def cache_indicator_data(self, data: list[dict]):
         cursor = self.conn.cursor()
         for entry in data:
             cursor.execute("INSERT OR REPLACE INTO indicator_cache (symbol, data, updated_at) VALUES (?, ?, ?)", 
-                           (entry["symbol"], str(entry["data"]), entry["updated_at"]))
+                           (entry["symbol"], json.dumps(entry["data"], default=str), entry["updated_at"]))
         self.conn.commit()
 
     def get_cached_ohlcv_data(self, symbol: str) -> dict | None:
@@ -168,15 +169,15 @@ class Database:
         cursor.execute("SELECT data, updated_at FROM ohlcv_cache WHERE symbol = ?", (symbol,))
         row = cursor.fetchone()
         if row:
-            return {"data": eval(row[0]), "updated_at": row[1]}
+            return {"data": json.loads(row[0]), "updated_at": row[1]}
         return None
     
-    def get_cached_indicator_data(self, symbol: str) -> dict | None:
+    def get_cached_indicator_data(self, symbol: str) -> dict[str, list[dict[str, float]]] | None:
         cursor = self.conn.cursor()
         cursor.execute("SELECT data, updated_at FROM indicator_cache WHERE symbol = ?", (symbol,))
         row = cursor.fetchone()
         if row:
-            return {"data": eval(row[0]), "updated_at": row[1]}
+            return {"data": json.loads(row[0]), "updated_at": row[1]}
         return None
 
     def save_llm_configuration(self, provider: str, api_key: str, model: str):
