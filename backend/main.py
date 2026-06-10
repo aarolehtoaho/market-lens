@@ -24,8 +24,12 @@ app.mount("/js", StaticFiles(directory=os.path.join(static_dir, "js")), name="js
 @app.get("/")
 async def root():
     """Serve the frontend home page (index.html)"""
-    frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "index.html")
+    frontend_path = os.path.join(static_dir, "index.html")
     return FileResponse(frontend_path)
+
+@app.get("/analysis")
+async def analysis():
+    return FileResponse(os.path.join(static_dir, "analysis.html"))
 
 @app.get("/favicon.ico")
 async def favicon():

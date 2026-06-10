@@ -31,8 +31,8 @@ async function loadHomeData() {
         return;
     }
 
-    document.getElementById("home-title").textContent = data.title;
-    document.getElementById("home-subtitle").textContent = data.subtitle;
+    document.getElementById("title").textContent = data.title;
+    document.getElementById("subtitle").textContent = data.subtitle;
 }
 
 async function loadWatchlist() {
@@ -446,6 +446,23 @@ async function updatePriceCards() {
     priceCardContainer.style.display = "grid";
 }
 
+function enableAnalysisButton() {
+    const analyzeButton = document.getElementById("analyze-button");
+
+    isWatchlistEmpty = selectedStocks.length === 0;
+    isInterestListEmpty = getInterestValues().length === 0;
+
+    if (isWatchlistEmpty || isInterestListEmpty) {
+        analyzeButton.disabled = true;
+        return;
+    }
+
+    analyzeButton.disabled = false;
+    analyzeButton.addEventListener("click", () => {
+        window.location.href = "/analysis";
+    });
+}
+
 function setupAiConfiguration() {
     const providerSelect = document.getElementById("ai-provider-dropdown");
     const apiKeyInputContainer = document.getElementById("ai-api-key");
@@ -457,6 +474,7 @@ function setupAiConfiguration() {
 
     providerSelect.addEventListener("change", async () => {
         messageParagraph.style.display = "none";
+        modelSelectContainer.style.display = "none";
         noProviderSelected = providerSelect.value === "";
         if (noProviderSelected) {
             apiKeyInputContainer.style.display = "none";
@@ -470,6 +488,10 @@ function setupAiConfiguration() {
                 const models = await fetchModels("ollama", "http://localhost:11434");
                 console.log("Fetched models for Ollama:", models);
                 modelSelect.innerHTML = "";
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.textContent = "-- Select a model --";
+                modelSelect.appendChild(defaultOption);
                 models.forEach(model => {
                     const option = document.createElement("option");
                     option.value = model;
@@ -506,6 +528,10 @@ function setupAiConfiguration() {
         try {
             const models = await fetchModels(provider, apiKey);
             modelSelect.innerHTML = "";
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "-- Select a model --";
+            modelSelect.appendChild(defaultOption);
             models.forEach(model => {
                 const option = document.createElement("option");
                 option.value = model;
@@ -531,8 +557,9 @@ function setupAiConfiguration() {
 
         try {
             const response = await saveLLMConfiguration(providerSelect.value, apiKeyInput.value.trim(), selectedModel);
-            messageParagraph.textContent = response.message || "Configuration saved successfully";
+            messageParagraph.textContent = "Configuration saved successfully";
             messageParagraph.style.display = "block";
+            enableAnalysisButton();
         } catch (error) {
             messageParagraph.textContent = error.message;
             messageParagraph.style.display = "block";
