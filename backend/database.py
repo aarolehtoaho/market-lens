@@ -85,6 +85,19 @@ class Database:
         """)
         self.conn.commit()
 
+        # Create a table for LLM responses
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS llm_responses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                prompt TEXT NOT NULL,
+                response TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.conn.commit()
+
     def cache_ticker_search(self, query: str, results: list[dict]):
         cursor = self.conn.cursor()
         cursor.execute("INSERT OR REPLACE INTO ticker_cache (query, results) VALUES (?, ?)", (query, str(results)))
@@ -199,3 +212,37 @@ class Database:
         if rows:
             return [{"provider": row[0], "api_key": row[1], "model": row[2], "updated_at": row[3]} for row in rows]
         return None
+    
+    def save_llm_response(self, provider: str, model: str, prompt: str, response: str):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO llm_responses (provider, model, prompt, response) 
+            VALUES (?, ?, ?, ?)
+        """, (provider, model, prompt, response))
+        self.conn.commit()
+
+    def get_llm_responses(self, provider: str, model: str) -> list[dict] | None:
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT prompt, response, created_at 
+            FROM llm_responses 
+            WHERE provider = ? AND model = ? 
+            ORDER BY created_at DESC
+        """, (provider, model))
+        rows = cursor.fetchall()
+        if rows:
+            return [{"prompt": row[0], "response": row[1], "created_at": row[2]} for row in rows]
+        return None
+
+    def get_llm_response_history_info(self):
+        """Fetch a list of past LLM responses with provider, model, and timestamp."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT provider, model, created_at 
+            FROM llm_responses 
+            ORDER BY created_at DESC
+        """)
+        rows = cursor.fetchall()
+        if rows:
+            return [{"provider": row[0], "model": row[1], "created_at": row[2]} for row in rows]
+        return []

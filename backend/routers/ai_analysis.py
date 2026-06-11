@@ -65,5 +65,7 @@ async def generate_analysis() -> dict:
         analysis = llm_service.generate_response(model, prompt)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate analysis: {str(e)}")
+    
+    db.save_llm_response(provider, model, prompt, analysis)
 
     return {"analysis": analysis}
