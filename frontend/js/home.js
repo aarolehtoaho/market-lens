@@ -486,7 +486,6 @@ function setupAiConfiguration() {
             // Fetch models for ollama immediately, since it doesn't require an API key
             try {
                 const models = await fetchModels("ollama", "http://localhost:11434");
-                console.log("Fetched models for Ollama:", models);
                 modelSelect.innerHTML = "";
                 const defaultOption = document.createElement("option");
                 defaultOption.value = "";
