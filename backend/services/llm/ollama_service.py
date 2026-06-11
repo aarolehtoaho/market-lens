@@ -13,7 +13,12 @@ class OllamaService(LLMService):
         try:
             response = self.client.generate(
                 model=model,
-                prompt=prompt
+                prompt=prompt,
+                options={
+                    "num_ctx": 16384,
+                    "temperature": 0.7,
+                    "num_predict": 2048
+                }
             )
             return response['response']
         except Exception as e:

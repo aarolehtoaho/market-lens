@@ -65,17 +65,22 @@ async function createAnalysis() {
         return null;
     }
 
-    analysis_cleaned = cleanJsonString(analysis_str);
+    try {
+        analysis_cleaned = cleanJsonString(analysis_str);
+    } catch (error) {
+        subtitle.textContent = 'Received invalid analysis format from AI. Raw response below.';
+        displayRawAnalysis(analysis_str);
+        throw new Error(`Error cleaning analysis string: ${error.message}`);
+    }
 
     try {
         const analysis = JSON.parse(analysis_cleaned);
         subtitle.textContent = "Analysis generated successfully!";
         return analysis;
     } catch (error) {
-        subtitle.textContent = `Error parsing analysis: ${error.message}`;
-        console.log("Raw analysis string:", analysis_str);
-        console.log("Cleaned analysis string:", analysis_cleaned);
-        return null;
+        subtitle.textContent = `Received invalid JSON format from AI. Raw response below.`;
+        displayRawAnalysis(analysis_cleaned);
+        throw new Error(`Error parsing analysis JSON: ${error.message}`);
     }
 }
 
@@ -138,13 +143,33 @@ async function displayAnalysis(analysis) {
     }
 }
 
+function displayRawAnalysis(rawAnalysis) {
+    const analysisPanel = document.getElementById("panel-analysis");
+    analysisPanel.style.display = "block";
+
+    const analysisSummaryElem = document.getElementById("analysis-summary");
+    analysisSummaryElem.textContent = rawAnalysis;
+
+    const analysisHeadingElem = document.getElementById("analysis-heading");
+    analysisHeadingElem.style.color = "red";
+
+    const analysisResultsElem = document.getElementById("analysis-results");
+    analysisResultsElem.style.display = "none";
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     validData = await checkStoredData();
     if (!validData) {
         return;
     }
 
-    const analysis = await createAnalysis();
+    try {
+        const analysis = await createAnalysis();
+    } catch (error) {
+        console.log(error.message);
+        return;
+    }
+    
     if (!analysis) {
         return;
     }
