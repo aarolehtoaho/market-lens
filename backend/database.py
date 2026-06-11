@@ -221,28 +221,28 @@ class Database:
         """, (provider, model, prompt, response))
         self.conn.commit()
 
-    def get_llm_responses(self, provider: str, model: str) -> list[dict] | None:
+    def get_llm_response(self, id: int) -> dict | None:
         cursor = self.conn.cursor()
         cursor.execute("""
             SELECT prompt, response, created_at 
             FROM llm_responses 
-            WHERE provider = ? AND model = ? 
+            WHERE id = ? 
             ORDER BY created_at DESC
-        """, (provider, model))
-        rows = cursor.fetchall()
-        if rows:
-            return [{"prompt": row[0], "response": row[1], "created_at": row[2]} for row in rows]
+        """, (id,))
+        row = cursor.fetchone()
+        if row:
+            return {"prompt": row[0], "response": row[1], "created_at": row[2]}
         return None
-
-    def get_llm_response_history_info(self):
-        """Fetch a list of past LLM responses with provider, model, and timestamp."""
+        
+    def get_llm_response_history(self):
+        """Fetch a list of past LLM responses with provider, model, id, and timestamp."""
         cursor = self.conn.cursor()
         cursor.execute("""
-            SELECT provider, model, created_at 
+            SELECT provider, model, created_at, id 
             FROM llm_responses 
             ORDER BY created_at DESC
         """)
         rows = cursor.fetchall()
         if rows:
-            return [{"provider": row[0], "model": row[1], "created_at": row[2]} for row in rows]
+            return [{"provider": row[0], "model": row[1], "created_at": row[2], "id": row[3]} for row in rows]
         return []

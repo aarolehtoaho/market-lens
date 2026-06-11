@@ -69,3 +69,14 @@ async def generate_analysis() -> dict:
     db.save_llm_response(provider, model, prompt, analysis)
 
     return {"analysis": analysis}
+
+@router.get("/history")
+async def get_analysis_by_id(id: int) -> dict:
+    history = db.get_llm_response(id)
+    if history:
+        return history
+    raise HTTPException(status_code=404, detail=f"No analysis history found for id: {id}")
+
+@router.get("/history/all")
+async def get_analysis_history() -> list[dict]:
+    return db.get_llm_response_history()
