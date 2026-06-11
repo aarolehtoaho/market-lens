@@ -209,3 +209,33 @@ async function getAiAnalysis() {
         throw new Error(`${error.message}`);
     }
 }
+
+async function getAnalysisHistory() {
+    try {
+        const response = await fetch("/api/analysis/history/all");
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+        
+        return await response.json();    
+    } catch (error) {
+        throw new Error(`${error.message}`);
+    }
+}
+
+async function getAnalysisById(analysisId) {
+    try {
+        const response = await fetch(`/api/analysis/history?id=${analysisId}`);
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+
+        analysis = await response.json();
+
+        return analysis.response;
+    } catch (error) {
+        throw new Error(`${error.message}`);
+    }
+}

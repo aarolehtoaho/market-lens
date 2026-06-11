@@ -157,14 +157,51 @@ function displayRawAnalysis(rawAnalysis) {
     analysisResultsElem.style.display = "none";
 }
 
+async function setupHistoryDropdown() {
+    const historyDropdown = document.getElementById("history-dropdown");
+    try {
+        const history = await getAnalysisHistory();
+        history.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = `${item.created_at} - ${item.provider} ${item.model}`;
+            historyDropdown.appendChild(option);
+        });
+
+        historyDropdown.addEventListener("change", async () => {
+            const subtitle = document.getElementById("subtitle");
+            const selectedId = historyDropdown.value;
+            if (selectedId) {
+                subtitle.textContent = `Displaying analysis for: ${historyDropdown.options[historyDropdown.selectedIndex].text}`;
+                analysis_str = "";
+                try {
+                    analysis_str = await getAnalysisById(selectedId);
+                    const analysis = JSON.parse(cleanJsonString(analysis_str));
+                    await displayAnalysis(analysis);
+                } catch (error) {
+                    subtitle.textContent = `Error loading selected analysis: ${error.message}. Displaying raw response.`;
+                    displayRawAnalysis(analysis_str);
+                }
+            }
+        });
+    } catch (error) {
+        console.log(error.message);
+        const historyPanel = document.getElementById("history-panel");
+        historyPanel.style.display = "none";
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+    setupHistoryDropdown();
+
     validData = await checkStoredData();
     if (!validData) {
         return;
     }
 
+    analysis = null;
     try {
-        const analysis = await createAnalysis();
+        analysis = await createAnalysis();
     } catch (error) {
         console.log(error.message);
         return;
@@ -174,5 +211,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    await displayAnalysis(analysis);
+    try {
+        await displayAnalysis(analysis);
+    } catch (error) {
+        console.log(error.message);
+        const subtitle = document.getElementById("subtitle");
+        subtitle.textContent = "LLM response JSON has invalid format. Displaying raw response.";
+        displayRawAnalysis(analysis_str);
+    }
 });
