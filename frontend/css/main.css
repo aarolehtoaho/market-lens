@@ -420,6 +420,17 @@ body {
     margin-top: 0.6rem;
 }
 
+#history-dropdown {
+    margin-top: 0.35rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fffefb;
+    box-shadow: 0 10px 20px rgba(16, 35, 47, 0.12);
+    padding: 0.65rem 0.85rem;
+    font-family: Consolas, Monaco, monospace;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
 
 @keyframes rise {
     from {
